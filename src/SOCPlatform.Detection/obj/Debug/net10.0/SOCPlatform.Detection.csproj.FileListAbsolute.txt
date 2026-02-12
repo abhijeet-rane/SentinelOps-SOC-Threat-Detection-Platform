@@ -1,0 +1,17 @@
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Detection.deps.json
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Detection.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Detection.pdb
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Core.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Core.pdb
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.csproj.AssemblyReference.cache
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.AssemblyInfoInputs.cache
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.AssemblyInfo.cs
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.csproj.CoreCompileInputs.cache
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatf.086FD596.Up2Date
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\refint\SOCPlatform.Detection.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.pdb
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\ref\SOCPlatform.Detection.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Infrastructure.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\SOCPlatform.Infrastructure.pdb

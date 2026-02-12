@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # ──────────────────────────────────────
+  #  PostgreSQL Database (Local Dev)
+  # ──────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: soc-postgres
+    environment:
+      POSTGRES_DB: socplatform
+      POSTGRES_USER: socadmin
+      POSTGRES_PASSWORD: SocDev2026
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U socadmin -d socplatform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local

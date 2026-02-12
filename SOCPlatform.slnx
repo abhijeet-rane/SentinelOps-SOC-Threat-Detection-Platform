@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SOCPlatform.API/SOCPlatform.API.csproj" />
+    <Project Path="src/SOCPlatform.Core/SOCPlatform.Core.csproj" />
+    <Project Path="src/SOCPlatform.DesktopAgent/SOCPlatform.DesktopAgent.csproj" />
+    <Project Path="src/SOCPlatform.Detection/SOCPlatform.Detection.csproj" />
+    <Project Path="src/SOCPlatform.Infrastructure/SOCPlatform.Infrastructure.csproj" />
+  </Folder>
+</Solution>

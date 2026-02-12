@@ -1,0 +1,6 @@
+@SOCPlatform.API_HostAddress = http://localhost:5101
+
+GET {{SOCPlatform.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
