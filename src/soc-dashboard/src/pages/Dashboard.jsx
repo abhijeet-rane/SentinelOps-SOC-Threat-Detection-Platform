@@ -17,14 +17,7 @@ const defaultStats = {
     critical: 0, high: 0, medium: 0, low: 0, slaBreaches: 0, unassignedCritical: 0,
 };
 
-const trendData = [
-    { time: '00:00', alerts: 4, incidents: 1 }, { time: '02:00', alerts: 2, incidents: 0 },
-    { time: '04:00', alerts: 1, incidents: 0 }, { time: '06:00', alerts: 3, incidents: 1 },
-    { time: '08:00', alerts: 8, incidents: 2 }, { time: '10:00', alerts: 15, incidents: 3 },
-    { time: '12:00', alerts: 12, incidents: 2 }, { time: '14:00', alerts: 18, incidents: 4 },
-    { time: '16:00', alerts: 22, incidents: 5 }, { time: '18:00', alerts: 14, incidents: 3 },
-    { time: '20:00', alerts: 8, incidents: 1 }, { time: '22:00', alerts: 5, incidents: 1 },
-];
+
 
 const container = {
     hidden: { opacity: 0 },
@@ -69,15 +62,17 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [stats, setStats] = useState(defaultStats);
     const [recentAlerts, setRecentAlerts] = useState([]);
+    const [trendData, setTrendData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [statsRes, alertsRes] = await Promise.all([
+                const [statsRes, alertsRes, trendRes] = await Promise.all([
                     api.getAlertStats(),
                     api.getAlerts({ pageSize: 5, sortBy: 'CreatedAt', sortOrder: 'desc' }),
+                    api.getAlertTrend(),
                 ]);
 
                 if (statsRes?.success && statsRes?.data) {
@@ -109,6 +104,10 @@ export default function Dashboard() {
                         time: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
                         source: a.sourceIP || a.affectedUser || '',
                     })));
+                }
+
+                if (trendRes?.success && trendRes?.data) {
+                    setTrendData(Array.isArray(trendRes.data) ? trendRes.data : []);
                 }
             } catch (err) {
                 console.error('Dashboard load error:', err);
@@ -201,11 +200,11 @@ export default function Dashboard() {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
-                            <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
+                            <XAxis dataKey="hour" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                             <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                             <Tooltip content={<CustomTooltip />} />
                             <Area type="monotone" dataKey="alerts" stroke="#06b6d4" fill="url(#alertGrad)" strokeWidth={2} name="Alerts" />
-                            <Area type="monotone" dataKey="incidents" stroke="#ef4444" fill="url(#incidentGrad)" strokeWidth={2} name="Incidents" />
+                            <Area type="monotone" dataKey="critical" stroke="#ef4444" fill="url(#incidentGrad)" strokeWidth={2} name="Critical" />
                             <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)' }} />
                         </AreaChart>
                     </ResponsiveContainer>

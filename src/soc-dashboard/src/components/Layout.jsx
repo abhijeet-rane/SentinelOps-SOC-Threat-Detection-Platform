@@ -5,9 +5,36 @@ import {
     Settings, BookOpen, Bell, Search, LogOut, Activity, Zap, ScrollText, Database
 } from 'lucide-react';
 
+/* ── Role-based nav config ──
+   roles: array of roles that can see this item ('*' = everyone)
+*/
+const NAV_ITEMS = [
+    { section: 'Operations' },
+    { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, roles: ['*'] },
+    { to: '/alerts', label: 'Alerts', icon: AlertTriangle, badge: '!', roles: ['*'] },
+    { to: '/incidents', label: 'Incidents', icon: FileSearch, roles: ['*'] },
+
+    { section: 'Intelligence' },
+    { to: '/threatintel', label: 'Threat Intel', icon: Database, roles: ['*'] },
+    { to: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['Admin', 'SOC Manager', 'Analyst'] },
+    { to: '/mitre', label: 'MITRE ATT&CK', icon: Activity, roles: ['Admin', 'SOC Manager', 'Analyst'] },
+
+    { section: 'Management' },
+    { to: '/playbooks', label: 'Playbooks', icon: Zap, roles: ['Admin', 'SOC Manager'] },
+    { to: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
+    { to: '/audit', label: 'Audit Log', icon: ScrollText, roles: ['Admin', 'SOC Manager'] },
+];
+
 export default function Layout() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('soc_user') || '{}');
+    const userRole = user.role || '';
+
+    const canSee = (item) => {
+        if (!item.roles) return true;
+        if (item.roles.includes('*')) return true;
+        return item.roles.includes(userRole);
+    };
 
     const handleLogout = () => {
         setToken(null);
@@ -30,39 +57,18 @@ export default function Layout() {
                 </div>
 
                 <nav className="sidebar-nav">
-                    <span className="sidebar-section">Operations</span>
-                    <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <LayoutDashboard size={18} /> Dashboard
-                    </NavLink>
-                    <NavLink to="/alerts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <AlertTriangle size={18} /> Alerts
-                        <span className="badge">!</span>
-                    </NavLink>
-                    <NavLink to="/incidents" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <FileSearch size={18} /> Incidents
-                    </NavLink>
-
-                    <span className="sidebar-section">Intelligence</span>
-                    <NavLink to="/threatintel" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <Database size={18} /> Threat Intel
-                    </NavLink>
-                    <NavLink to="/analytics" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <BarChart3 size={18} /> Analytics
-                    </NavLink>
-                    <NavLink to="/mitre" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <Activity size={18} /> MITRE ATT&CK
-                    </NavLink>
-
-                    <span className="sidebar-section">Management</span>
-                    <NavLink to="/playbooks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <Zap size={18} /> Playbooks
-                    </NavLink>
-                    <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <Settings size={18} /> Settings
-                    </NavLink>
-                    <NavLink to="/audit" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <ScrollText size={18} /> Audit Log
-                    </NavLink>
+                    {NAV_ITEMS.map((item, i) => {
+                        if (item.section) return <span key={i} className="sidebar-section">{item.section}</span>;
+                        if (!canSee(item)) return null;
+                        const Icon = item.icon;
+                        return (
+                            <NavLink key={item.to} to={item.to} end={item.end}
+                                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                                <Icon size={18} /> {item.label}
+                                {item.badge && <span className="badge">{item.badge}</span>}
+                            </NavLink>
+                        );
+                    })}
                 </nav>
 
                 <div className="sidebar-footer">
@@ -70,7 +76,7 @@ export default function Layout() {
                         <div className="user-avatar">{(user.username || 'A')[0].toUpperCase()}</div>
                         <div className="user-info" style={{ flex: 1 }}>
                             <div className="user-name">{user.username || 'Analyst'}</div>
-                            <div className="user-role">{user.role || 'SOC Analyst'}</div>
+                            <div className="user-role">{userRole || 'SOC Analyst'}</div>
                         </div>
                         <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                             <LogOut size={16} />

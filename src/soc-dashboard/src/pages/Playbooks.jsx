@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Play, CheckCircle, XCircle, Clock, AlertTriangle, Shield, Loader } from 'lucide-react';
 import { api } from '../api';
+import { useToast } from '../components/Toast';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -12,6 +13,7 @@ export default function Playbooks() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
+    const toast = useToast();
 
     const fetchData = async () => {
         setLoading(true);
@@ -33,6 +35,7 @@ export default function Playbooks() {
     const handleApprove = async (id) => {
         setActionLoading(id);
         await api.approveExecution(id);
+        toast.success('Execution approved');
         await fetchData();
         setActionLoading(null);
     };
@@ -40,6 +43,7 @@ export default function Playbooks() {
     const handleReject = async (id) => {
         setActionLoading(id);
         await api.rejectExecution(id, 'Rejected by analyst');
+        toast.warning('Execution rejected');
         await fetchData();
         setActionLoading(null);
     };

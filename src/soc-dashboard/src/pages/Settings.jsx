@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon, Shield, Users, Plus, X, Edit3, Trash2, Power, Loader, Save } from 'lucide-react';
 import { api } from '../api';
+import { useToast } from '../components/Toast';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -13,6 +14,7 @@ export default function Settings() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [editUser, setEditUser] = useState(null);
+    const toast = useToast();
 
     // ── Rules ──
     const fetchRules = async () => {
@@ -26,12 +28,14 @@ export default function Settings() {
     const toggleRule = async (id, isEnabled) => {
         await api.toggleRule(id, !isEnabled);
         setRules(prev => prev.map(r => r.id === id ? { ...r, isEnabled: !r.isEnabled } : r));
+        toast.success(`Rule ${isEnabled ? 'disabled' : 'enabled'}`);
     };
 
     const deleteRule = async (id) => {
         if (!confirm('Delete this detection rule?')) return;
         await api.deleteRule(id);
         setRules(prev => prev.filter(r => r.id !== id));
+        toast.error('Rule deleted');
     };
 
     // ── Users ──
@@ -47,6 +51,7 @@ export default function Settings() {
         if (!confirm('Deactivate this user?')) return;
         await api.deactivateUser(id);
         setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
+        toast.warning('User deactivated');
     };
 
     const handleSaveUser = async () => {
@@ -59,6 +64,7 @@ export default function Settings() {
         if (res.success) {
             setUsers(prev => prev.map(u => u.id === editUser.id ? res.data : u));
             setEditUser(null);
+            toast.success('User updated');
         }
     };
 

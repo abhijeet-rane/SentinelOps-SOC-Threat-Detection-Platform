@@ -5,6 +5,8 @@ import {
     ChevronUp, Clock, RefreshCw
 } from 'lucide-react';
 import { api } from '../api';
+import AlertDetailModal from '../components/AlertDetailModal';
+import { useToast } from '../components/Toast';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -14,6 +16,8 @@ export default function Alerts() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ page: 1, pageSize: 20 });
     const [total, setTotal] = useState(0);
+    const [selectedAlert, setSelectedAlert] = useState(null);
+    const toast = useToast();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -36,6 +40,7 @@ export default function Alerts() {
 
     const handleEscalate = async (id) => {
         await api.escalateAlert(id);
+        toast.success('Alert escalated successfully');
         load();
     };
 
@@ -152,7 +157,7 @@ export default function Alerts() {
                                             </td>
                                             <td>
                                                 <div className="flex gap-sm">
-                                                    <button className="btn btn-ghost btn-sm" title="View Details">
+                                                    <button className="btn btn-ghost btn-sm" title="View Details" onClick={() => setSelectedAlert(alert)}>
                                                         <Eye size={14} />
                                                     </button>
                                                     <button className="btn btn-ghost btn-sm" title="Escalate" onClick={() => handleEscalate(alert.id)}
@@ -186,6 +191,8 @@ export default function Alerts() {
                     </button>
                 </motion.div>
             )}
+
+            <AlertDetailModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
         </motion.div>
     );
 }
