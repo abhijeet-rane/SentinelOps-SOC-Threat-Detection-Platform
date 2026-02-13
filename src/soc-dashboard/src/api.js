@@ -131,4 +131,34 @@ export const api = {
 
   // ── Roles ──
   getRoles: () => request('/auth/roles'),
+
+  // ── Reports ──
+  getDailyReport: (from, to) =>
+    request(`/reports/daily?from=${from}&to=${to}`),
+  getIncidentReport: (from, to) =>
+    request(`/reports/incidents?from=${from}&to=${to}`),
+  getAnalystReport: (from, to) =>
+    request(`/reports/analysts?from=${from}&to=${to}`),
+  getComplianceReport: (from, to, framework = 'NIST') =>
+    request(`/reports/compliance?from=${from}&to=${to}&framework=${framework}`),
+  exportReport: async (type, format, from, to, framework = 'NIST') => {
+    const url = `${API_BASE}/reports/export?type=${type}&format=${format}&from=${from}&to=${to}&framework=${framework}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    if (!res.ok) throw new Error('Export failed');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `soc-${type}-report.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  },
+
+  // ── ML Detection ──
+  getMlStatus: () => request('/ml/status'),
+  mlAnalyze: (data) =>
+    request('/ml/analyze', { method: 'POST', body: JSON.stringify(data) }),
+  mlTrain: (model = 'all') =>
+    request('/ml/train', { method: 'POST', body: JSON.stringify({ model }) }),
 };

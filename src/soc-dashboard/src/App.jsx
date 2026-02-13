@@ -12,6 +12,7 @@ import Playbooks from './pages/Playbooks';
 import SettingsPage from './pages/Settings';
 import AuditLog from './pages/AuditLog';
 import ThreatIntel from './pages/ThreatIntel';
+import Reports from './pages/Reports';
 import './index.css';
 
 function ProtectedRoute({ children }) {
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="threatintel" element={<ThreatIntel />} />
             <Route path="audit" element={<AuditLog />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Routes>
       </BrowserRouter>

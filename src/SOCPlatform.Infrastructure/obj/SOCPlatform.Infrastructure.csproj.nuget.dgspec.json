@@ -385,6 +385,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.0, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[10.0.2, )"
@@ -400,6 +404,10 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[10.0.0, )"
+            },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2026.2.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",

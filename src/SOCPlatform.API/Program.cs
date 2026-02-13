@@ -14,6 +14,7 @@ using SOCPlatform.Detection.Rules;
 using SOCPlatform.Detection.Playbooks;
 using SOCPlatform.Infrastructure;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,20 @@ builder.Services.AddSingleton<IPlaybookAction, LockAccountAction>();
 builder.Services.AddSingleton<IPlaybookAction, NotifyManagerAction>();
 builder.Services.AddSingleton<IPlaybookAction, EscalateAlertAction>();
 builder.Services.AddHostedService<PlaybookEngine>();
+
+// ──────────────────────────────────────────────────
+//  Reporting & Compliance
+// ──────────────────────────────────────────────────
+builder.Services.AddScoped<ReportService>();
+
+// ──────────────────────────────────────────────────
+//  ML Integration (Python microservice on port 8001)
+// ──────────────────────────────────────────────────
+builder.Services.AddHttpClient<MlIntegrationService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:8001");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // ──────────────────────────────────────────────────
 //  Authentication (JWT Bearer)

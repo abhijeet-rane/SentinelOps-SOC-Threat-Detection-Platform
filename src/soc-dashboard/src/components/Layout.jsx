@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { setToken } from '../api';
 import {
     Shield, LayoutDashboard, AlertTriangle, FileSearch, BarChart3,
-    Settings, BookOpen, Bell, Search, LogOut, Activity, Zap, ScrollText, Database
+    Settings, BookOpen, Bell, Search, LogOut, Activity, Zap, ScrollText, Database, FileText
 } from 'lucide-react';
 
 /* ── Role-based nav config ──
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
 
     { section: 'Management' },
     { to: '/playbooks', label: 'Playbooks', icon: Zap, roles: ['Admin', 'SOC Manager'] },
+    { to: '/reports', label: 'Reports', icon: FileText, roles: ['Admin', 'SOC Manager'] },
     { to: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
     { to: '/audit', label: 'Audit Log', icon: ScrollText, roles: ['Admin', 'SOC Manager'] },
 ];
