@@ -5,5 +5,6 @@
     <Project Path="src/SOCPlatform.DesktopAgent/SOCPlatform.DesktopAgent.csproj" />
     <Project Path="src/SOCPlatform.Detection/SOCPlatform.Detection.csproj" />
     <Project Path="src/SOCPlatform.Infrastructure/SOCPlatform.Infrastructure.csproj" />
+    <Project Path="src/SOCPlatform.Tests/SOCPlatform.Tests.csproj" />
   </Folder>
 </Solution>
