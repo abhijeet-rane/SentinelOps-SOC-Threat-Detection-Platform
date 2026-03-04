@@ -212,6 +212,20 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// 1. Security headers (OWASP Top 10 – A05 Security Misconfiguration)
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["X-Permitted-Cross-Domain-Policies"] = "none";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+    headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none';";
+    await next();
+});
+
 // 2. Request size limit (5MB – blocks oversized payloads early)
 app.UseMiddleware<RequestSizeLimitMiddleware>();
 

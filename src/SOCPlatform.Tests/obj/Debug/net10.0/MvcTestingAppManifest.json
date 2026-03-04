@@ -1,0 +1,6 @@
+{
+  "SOCPlatform.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.API",
+  "SOCPlatform.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Core",
+  "SOCPlatform.Detection, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Detection",
+  "SOCPlatform.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Infrastructure"
+}
