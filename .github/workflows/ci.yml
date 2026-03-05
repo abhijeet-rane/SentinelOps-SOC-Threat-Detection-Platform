@@ -1,0 +1,97 @@
+name: SOC Platform CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend:
+    name: Backend CI (.NET 10)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: socplatform
+          POSTGRES_USER: socadmin
+          POSTGRES_PASSWORD: SocDev2026
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore SOCPlatform.slnx
+
+    - name: Build
+      run: dotnet build SOCPlatform.slnx --configuration Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test src/SOCPlatform.Tests/SOCPlatform.Tests.csproj --configuration Release --no-build --verbosity normal
+      env:
+        ConnectionStrings__DefaultConnection: "Host=localhost;Port=5433;Database=socplatform;Username=socadmin;Password=SocDev2026;Include Error Detail=true"
+
+  ml:
+    name: ML CI (Python)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd src/SOCPlatform.ML
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-mock
+
+    - name: Run ML Tests
+      run: |
+        cd src/SOCPlatform.ML
+        python -m pytest tests/ -v
+
+  frontend:
+    name: Frontend CI (Node.js)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'src/soc-dashboard/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd src/soc-dashboard
+        npm install
+
+    - name: Lint
+      run: |
+        cd src/soc-dashboard
+        npm run lint
+
+    - name: Build
+      run: |
+        cd src/soc-dashboard
+        npm run build
