@@ -11,13 +11,10 @@ import {
 } from 'recharts';
 import { api } from '../api';
 
-const INDICATOR_ICONS = { IpAddress: Globe, Domain: Link, FileHash: Hash, Url: Link, Email: Mail };
-const THREAT_COLORS = { Critical: '#ef4444', High: '#f59e0b', Medium: '#06b6d4', Low: '#10b981', Informational: '#6b7280' };
+import { container, item, INDICATOR_ICONS, THREAT_COLORS } from './ThreatIntelConstants';
 
-const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
 
-const CustomTooltip = ({ active, payload, label }) => {
+function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
         <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '10px 14px', fontSize: '0.8rem' }}>
@@ -27,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             ))}
         </div>
     );
-};
+}
 
 function EnrichmentPanel() {
     const [value, setValue] = useState('');
@@ -53,11 +50,11 @@ function EnrichmentPanel() {
                 <div className="flex gap-sm items-end">
                     <div style={{ flex: 1 }}>
                         <label className="form-label">Value (IP, Domain, Hash, URL, or Email)</label>
-                        <input type="text" className="form-input" placeholder="192.168.1.105 or evil-domain.com or md5hash..."
+                        <input type="text" className="form-input" placeholder="192.168.1.105 or evil-domain.com"
                             value={value} onChange={e => setValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEnrich()} />
                     </div>
                     <div style={{ width: 160 }}>
-                        <label className="form-label">Type (auto-detect)</label>
+                        <label className="form-label">Type</label>
                         <select className="form-select" value={type} onChange={e => setType(e.target.value)}>
                             <option value="">Auto-detect</option>
                             <option value="IpAddress">IP Address</option>
@@ -67,10 +64,9 @@ function EnrichmentPanel() {
                             <option value="Email">Email</option>
                         </select>
                     </div>
-                    <motion.button className="btn btn-primary" onClick={handleEnrich} disabled={loading}
-                        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ height: 40 }}>
+                    <button className="btn btn-primary" onClick={handleEnrich} disabled={loading} style={{ height: 40 }}>
                         {loading ? <Loader2 size={14} className="spin" /> : <Zap size={14} />} Enrich
-                    </motion.button>
+                    </button>
                 </div>
 
                 <AnimatePresence>
@@ -82,43 +78,12 @@ function EnrichmentPanel() {
                                 background: result.isMalicious ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)',
                                 border: `1px solid ${result.isMalicious ? 'var(--red-400)' : 'var(--green-400)'}`,
                             }}>
-                                <div className="flex items-center gap-sm" style={{ marginBottom: 12 }}>
-                                    {result.isMalicious
-                                        ? <AlertTriangle size={18} color="var(--red-400)" />
-                                        : <Shield size={18} color="var(--green-400)" />
-                                    }
+                                <div className="flex items-center gap-sm">
+                                    {result.isMalicious ? <AlertTriangle size={18} color="var(--red-400)" /> : <Shield size={18} color="var(--green-400)" />}
                                     <strong style={{ color: result.isMalicious ? 'var(--red-400)' : 'var(--green-400)' }}>
-                                        {result.isMalicious ? `⚠ MALICIOUS — ${result.matchCount} match(es)` : '✓ No threats found'}
+                                        {result.isMalicious ? 'MALICIOUS' : 'Safe'}
                                     </strong>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                                        Query: <code>{result.queryValue}</code> ({result.queryType})
-                                    </span>
                                 </div>
-
-                                {result.matches?.length > 0 && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {result.matches.map((m, i) => (
-                                            <div key={i} style={{ background: 'var(--bg-surface)', padding: 12, borderRadius: 8, fontSize: '0.82rem' }}>
-                                                <div className="flex gap-md flex-wrap">
-                                                    <span><strong>Source:</strong> {m.source}</span>
-                                                    <span><strong>Type:</strong> {m.threatType}</span>
-                                                    <span className={`severity-badge ${m.threatLevel.toLowerCase()}`}>{m.threatLevel}</span>
-                                                    <span><strong>Confidence:</strong> {m.confidenceScore}%</span>
-                                                </div>
-                                                {m.description && <div style={{ marginTop: 6, color: 'var(--text-secondary)' }}>{m.description}</div>}
-                                                <div className="flex gap-sm flex-wrap" style={{ marginTop: 6 }}>
-                                                    {m.tags && m.tags.split(',').map(tag => (
-                                                        <span key={tag} style={{ background: 'var(--bg-deep)', padding: '1px 8px', borderRadius: 4, fontSize: '0.7rem', color: 'var(--cyan-400)' }}>
-                                                            {tag.trim()}
-                                                        </span>
-                                                    ))}
-                                                    {m.associatedCVEs && <span style={{ color: 'var(--amber-400)', fontSize: '0.72rem' }}>CVEs: {m.associatedCVEs}</span>}
-                                                    {m.mitreTechniques && <span style={{ color: 'var(--purple-400)', fontSize: '0.72rem' }}>MITRE: {m.mitreTechniques}</span>}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
                         </motion.div>
                     )}
@@ -129,115 +94,44 @@ function EnrichmentPanel() {
 }
 
 function AddIndicatorModal({ onClose, onCreated }) {
-    const [form, setForm] = useState({
-        indicatorType: 'IpAddress', value: '', source: 'Manual', confidenceScore: 50,
-        threatType: '', threatLevel: 'Medium', description: '', tags: '',
-        associatedCVEs: '', mitreTechniques: '', geoCountry: '', asn: '',
-    });
-    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({ indicatorType: 'IpAddress', value: '', source: 'Manual', confidenceScore: 50, threatLevel: 'Medium' });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         const res = await api.createThreatIntel(form);
         if (res?.success) { onCreated(); onClose(); }
-        setLoading(false);
     };
-
-    const set = (key) => (e) => setForm({ ...form, [key]: key === 'confidenceScore' ? parseInt(e.target.value) : e.target.value });
 
     return (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={onClose}>
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 28, width: 600, maxHeight: '80vh', overflowY: 'auto' }}
+            <div style={{ background: 'var(--bg-elevated)', padding: 24, borderRadius: 14, width: 400 }}
                 onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
-                    <h3><Plus size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 8 }} />Add Indicator</h3>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
-                </div>
+                <h3 style={{ marginBottom: 18 }}>Add Indicator</h3>
                 <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div className="form-group">
-                            <label className="form-label">Type</label>
-                            <select className="form-select" value={form.indicatorType} onChange={set('indicatorType')}>
-                                <option value="IpAddress">IP Address</option>
-                                <option value="Domain">Domain</option>
-                                <option value="FileHash">File Hash</option>
-                                <option value="Url">URL</option>
-                                <option value="Email">Email</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Value</label>
-                            <input className="form-input" placeholder="e.g. 192.168.1.1" value={form.value} onChange={set('value')} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Source</label>
-                            <input className="form-input" placeholder="e.g. AbuseIPDB" value={form.source} onChange={set('source')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Confidence (0–100)</label>
-                            <input type="number" className="form-input" min={0} max={100} value={form.confidenceScore} onChange={set('confidenceScore')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Threat Type</label>
-                            <select className="form-select" value={form.threatType} onChange={set('threatType')}>
-                                <option value="">Select...</option>
-                                <option value="Malware">Malware</option>
-                                <option value="C2">C2 (Command & Control)</option>
-                                <option value="Phishing">Phishing</option>
-                                <option value="Botnet">Botnet</option>
-                                <option value="Scanner">Scanner</option>
-                                <option value="APT">APT</option>
-                                <option value="Ransomware">Ransomware</option>
-                                <option value="Trojan">Trojan</option>
-                                <option value="Cryptomining">Cryptomining</option>
-                                <option value="Brute Force">Brute Force</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Threat Level</label>
-                            <select className="form-select" value={form.threatLevel} onChange={set('threatLevel')}>
-                                <option value="Critical">Critical</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                                <option value="Informational">Informational</option>
-                            </select>
-                        </div>
-                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                            <label className="form-label">Description</label>
-                            <input className="form-input" placeholder="Why is this indicator malicious?" value={form.description} onChange={set('description')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Tags (comma-separated)</label>
-                            <input className="form-input" placeholder="ransomware,lockbit" value={form.tags} onChange={set('tags')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">MITRE Techniques</label>
-                            <input className="form-input" placeholder="T1566,T1059" value={form.mitreTechniques} onChange={set('mitreTechniques')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">CVEs</label>
-                            <input className="form-input" placeholder="CVE-2023-38831" value={form.associatedCVEs} onChange={set('associatedCVEs')} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Country</label>
-                            <input className="form-input" placeholder="RU, CN, US..." value={form.geoCountry} onChange={set('geoCountry')} />
-                        </div>
+                    <div className="form-group" style={{ marginBottom: 14 }}>
+                        <label className="form-label">Indicator Value</label>
+                        <input type="text" className="form-input" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} required placeholder="e.g. 1.2.3.4" />
                     </div>
-                    <div className="flex gap-sm justify-end" style={{ marginTop: 18 }}>
-                        <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {loading ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} Add Indicator
-                        </button>
+                    <div className="form-group" style={{ marginBottom: 18 }}>
+                        <label className="form-label">Type</label>
+                        <select className="form-select" value={form.indicatorType} onChange={e => setForm({ ...form, indicatorType: e.target.value })}>
+                            <option value="IpAddress">IP Address</option>
+                            <option value="Domain">Domain</option>
+                            <option value="FileHash">File Hash</option>
+                        </select>
+                    </div>
+                    <div className="flex gap-sm justify-end">
+                        <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                        <button type="submit" className="btn btn-primary">Add IOC</button>
                     </div>
                 </form>
-            </motion.div>
+            </div>
         </div>
     );
 }
+
+
 
 export default function ThreatIntel() {
     const [indicators, setIndicators] = useState([]);
@@ -262,7 +156,13 @@ export default function ThreatIntel() {
         setLoading(false);
     }, [filter]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        // Use a timeout or microtask to avoid synchronous state updates during render phase
+        const timer = setTimeout(() => {
+            load();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [load]);
 
     const handleSeed = async () => {
         setSeeding(true);
@@ -283,7 +183,6 @@ export default function ThreatIntel() {
 
     const updateFilter = (key, val) => setFilter(prev => ({ ...prev, [key]: val, page: 1 }));
 
-    const typeChartData = stats ? Object.entries(stats.byType || {}).map(([name, value]) => ({ name, value })) : [];
     const levelChartData = stats ? Object.entries(stats.byThreatLevel || {}).map(([name, value]) => ({ name, value, fill: THREAT_COLORS[name] || '#6b7280' })) : [];
     const sourceChartData = stats ? Object.entries(stats.bySource || {}).map(([name, count]) => ({ name, count })) : [];
 

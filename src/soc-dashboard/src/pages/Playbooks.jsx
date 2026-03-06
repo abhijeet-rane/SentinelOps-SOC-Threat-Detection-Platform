@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Play, CheckCircle, XCircle, Clock, AlertTriangle, Shield, Loader } from 'lucide-react';
 import { api } from '../api';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/ToastContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -30,7 +30,12 @@ export default function Playbooks() {
         setLoading(false);
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchData();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleApprove = async (id) => {
         setActionLoading(id);

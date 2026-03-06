@@ -66,55 +66,58 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadData = async () => {
-            setLoading(true);
-            try {
-                const [statsRes, alertsRes, trendRes] = await Promise.all([
-                    api.getAlertStats(),
-                    api.getAlerts({ pageSize: 5, sortBy: 'CreatedAt', sortOrder: 'desc' }),
-                    api.getAlertTrend(),
-                ]);
+        const timer = setTimeout(() => {
+            const loadData = async () => {
+                setLoading(true);
+                try {
+                    const [statsRes, alertsRes, trendRes] = await Promise.all([
+                        api.getAlertStats(),
+                        api.getAlerts({ pageSize: 5, sortBy: 'CreatedAt', sortOrder: 'desc' }),
+                        api.getAlertTrend(),
+                    ]);
 
-                if (statsRes?.success && statsRes?.data) {
-                    const d = statsRes.data;
-                    setStats({
-                        total: (d.byStatus?.New || 0) + (d.byStatus?.InProgress || 0) + (d.byStatus?.Escalated || 0) +
-                            (d.byStatus?.Resolved || 0) + (d.byStatus?.Closed || 0),
-                        newAlerts: d.byStatus?.New || 0,
-                        inProgress: d.byStatus?.InProgress || 0,
-                        escalated: d.byStatus?.Escalated || 0,
-                        resolved: d.byStatus?.Resolved || 0,
-                        closed: d.byStatus?.Closed || 0,
-                        critical: d.bySeverity?.Critical || 0,
-                        high: d.bySeverity?.High || 0,
-                        medium: d.bySeverity?.Medium || 0,
-                        low: d.bySeverity?.Low || 0,
-                        slaBreaches: d.slaBreaches || 0,
-                        unassignedCritical: d.unassignedCritical || 0,
-                    });
-                }
+                    if (statsRes?.success && statsRes?.data) {
+                        const d = statsRes.data;
+                        setStats({
+                            total: (d.byStatus?.New || 0) + (d.byStatus?.InProgress || 0) + (d.byStatus?.Escalated || 0) +
+                                (d.byStatus?.Resolved || 0) + (d.byStatus?.Closed || 0),
+                            newAlerts: d.byStatus?.New || 0,
+                            inProgress: d.byStatus?.InProgress || 0,
+                            escalated: d.byStatus?.Escalated || 0,
+                            resolved: d.byStatus?.Resolved || 0,
+                            closed: d.byStatus?.Closed || 0,
+                            critical: d.bySeverity?.Critical || 0,
+                            high: d.bySeverity?.High || 0,
+                            medium: d.bySeverity?.Medium || 0,
+                            low: d.bySeverity?.Low || 0,
+                            slaBreaches: d.slaBreaches || 0,
+                            unassignedCritical: d.unassignedCritical || 0,
+                        });
+                    }
 
-                if (alertsRes?.success && alertsRes?.data) {
-                    const items = Array.isArray(alertsRes.data) ? alertsRes.data : (alertsRes.data.items || []);
-                    setRecentAlerts(items.slice(0, 5).map(a => ({
-                        id: a.id,
-                        title: a.title,
-                        severity: a.severity,
-                        status: a.status,
-                        time: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
-                        source: a.sourceIP || a.affectedUser || '',
-                    })));
-                }
+                    if (alertsRes?.success && alertsRes?.data) {
+                        const items = Array.isArray(alertsRes.data) ? alertsRes.data : (alertsRes.data.items || []);
+                        setRecentAlerts(items.slice(0, 5).map(a => ({
+                            id: a.id,
+                            title: a.title,
+                            severity: a.severity,
+                            status: a.status,
+                            time: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
+                            source: a.sourceIP || a.affectedUser || '',
+                        })));
+                    }
 
-                if (trendRes?.success && trendRes?.data) {
-                    setTrendData(Array.isArray(trendRes.data) ? trendRes.data : []);
+                    if (trendRes?.success && trendRes?.data) {
+                        setTrendData(Array.isArray(trendRes.data) ? trendRes.data : []);
+                    }
+                } catch (err) {
+                    console.error('Dashboard load error:', err);
                 }
-            } catch (err) {
-                console.error('Dashboard load error:', err);
-            }
-            setLoading(false);
-        };
-        loadData();
+                setLoading(false);
+            };
+            loadData();
+        }, 0);
+        return () => clearTimeout(timer);
     }, []);
 
     const severityData = [

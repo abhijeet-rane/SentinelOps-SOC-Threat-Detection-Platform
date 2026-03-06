@@ -134,7 +134,12 @@ export default function Incidents() {
         setLoading(false);
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            load();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [load]);
 
     return (
         <motion.div variants={container} initial="hidden" animate="show">

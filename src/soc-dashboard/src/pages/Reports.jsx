@@ -5,7 +5,7 @@ import {
     AlertTriangle, Loader2, FileSpreadsheet
 } from 'lucide-react';
 import { api } from '../api';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/ToastContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -27,10 +27,8 @@ export default function Reports() {
     const [exporting, setExporting] = useState(null);
     const toast = useToast();
 
-    const defaultFrom = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
-    const defaultTo = new Date().toISOString().split('T')[0];
-    const [from, setFrom] = useState(defaultFrom);
-    const [to, setTo] = useState(defaultTo);
+    const [from, setFrom] = useState(() => new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]);
+    const [to, setTo] = useState(() => new Date().toISOString().split('T')[0]);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -49,9 +47,14 @@ export default function Reports() {
             toast.error('Failed to load report');
         }
         setLoading(false);
-    }, [tab, from, to, framework]);
+    }, [tab, from, to, framework, toast]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            load();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [load]);
 
     const handleExport = async (format) => {
         setExporting(format);

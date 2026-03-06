@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import AlertDetailModal from '../components/AlertDetailModal';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/ToastContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -34,7 +34,12 @@ export default function Alerts() {
         setLoading(false);
     }, [filter]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            load();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [load]);
 
     const updateFilter = (key, val) => setFilter(prev => ({ ...prev, [key]: val, page: 1 }));
 
