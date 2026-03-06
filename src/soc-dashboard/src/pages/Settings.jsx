@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon, Shield, Users, Plus, X, Edit3, Trash2, Power, Loader, Save } from 'lucide-react';
 import { api } from '../api';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/ToastContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -69,8 +69,11 @@ export default function Settings() {
     };
 
     useEffect(() => {
-        if (tab === 'rules') fetchRules();
-        else fetchUsers();
+        const timer = setTimeout(() => {
+            if (tab === 'rules') fetchRules();
+            else fetchUsers();
+        }, 0);
+        return () => clearTimeout(timer);
     }, [tab]);
 
     return (

@@ -27,11 +27,14 @@ export default function Analytics() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        (async () => {
-            const res = await api.getAnalytics();
-            if (res.success) setData(res.data);
-            setLoading(false);
-        })();
+        const timer = setTimeout(() => {
+            (async () => {
+                const res = await api.getAnalytics();
+                if (res.success) setData(res.data);
+                setLoading(false);
+            })();
+        }, 0);
+        return () => clearTimeout(timer);
     }, []);
 
     if (loading) {

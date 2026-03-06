@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollText, ShieldCheck, Loader } from 'lucide-react';
 import { api } from '../api';
@@ -23,7 +23,7 @@ export default function AuditLog() {
     const [loading, setLoading] = useState(true);
     const [integrity, setIntegrity] = useState(null);
 
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         setLoading(true);
         const params = { page, pageSize: 25 };
         if (entityFilter) params.entity = entityFilter;
@@ -33,9 +33,14 @@ export default function AuditLog() {
             setTotalCount(res.data.totalCount || 0);
         }
         setLoading(false);
-    };
+    }, [page, entityFilter]);
 
-    useEffect(() => { fetchLogs(); }, [page, entityFilter]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchLogs();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchLogs]);
 
     const checkIntegrity = async () => {
         const res = await api.verifyAuditIntegrity();
