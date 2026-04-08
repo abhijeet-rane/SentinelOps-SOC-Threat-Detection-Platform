@@ -1,0 +1,58 @@
+# .NET build output
+bin/
+obj/
+out/
+
+# .NET user/IDE files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# NuGet
+*.nupkg
+**/packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Node / Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+
+# pnpm
+.pnpm-store/
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment / secrets
+.env
+.env.*
+appsettings.Development.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Logs & temp
+*.log
+*.tmp
+lint_results.txt
+lint_report.json
+lint_full.txt
+last_lint.txt
