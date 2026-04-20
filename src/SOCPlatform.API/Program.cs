@@ -20,7 +20,9 @@ using Serilog;
 using SOCPlatform.API.Authorization;
 using SOCPlatform.API.ExceptionHandlers;
 using SOCPlatform.API.HealthChecks;
+using SOCPlatform.API.Hubs;
 using SOCPlatform.API.Middleware;
+using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Detection;
 using SOCPlatform.Detection.Playbooks;
 using SOCPlatform.Detection.Rules;
@@ -206,11 +208,18 @@ builder.Services.AddCors(o => o.AddPolicy("SOCDashboard", p => p
     .AllowCredentials()));
 
 // ────────────────────────────────────────────────────────────────────────────
-// 9. SignalR + Redis backplane (Phase 5 will add hubs)
+// 9. SignalR + Redis backplane — AlertHub for real-time alert push
 // ────────────────────────────────────────────────────────────────────────────
 var redisOpts = builder.Configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>() ?? new RedisOptions();
 builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisOpts.ConnectionString, o => o.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("socplatform-signalr"));
+
+// IAlertNotifier → SignalRAlertNotifier in prod, NullAlertNotifier in tests.
+// Detection engine always gets a working notifier, even in isolated test runs.
+if (builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddSingleton<IAlertNotifier, NullAlertNotifier>();
+else
+    builder.Services.AddSingleton<IAlertNotifier, SignalRAlertNotifier>();
 
 // ────────────────────────────────────────────────────────────────────────────
 // 10. Distributed Cache (Redis)
@@ -346,6 +355,7 @@ app.UseAuthorization();
 
 // 10. Endpoints
 app.MapControllers();
+app.MapHub<AlertHub>("/hubs/alerts");
 
 // Health endpoints
 app.MapHealthChecks("/health/live", new HealthCheckOptions

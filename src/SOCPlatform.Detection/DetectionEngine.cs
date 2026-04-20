@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SOCPlatform.Core.Entities;
+using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Detection.Rules;
 using SOCPlatform.Infrastructure.Data;
 
@@ -110,6 +111,12 @@ public class DetectionEngine : BackgroundService
             context.Alerts.AddRange(allAlerts);
             await context.SaveChangesAsync(ct);
             _logger.LogInformation("Persisted {AlertCount} alerts to database", allAlerts.Count);
+
+            // Fire-and-forget push to connected dashboard clients. Notifier
+            // swallows its own errors so a SignalR hiccup can't fail the cycle.
+            var notifier = scope.ServiceProvider.GetService<IAlertNotifier>();
+            if (notifier is not null)
+                await notifier.BroadcastAlertsAsync(allAlerts, ct);
         }
     }
 

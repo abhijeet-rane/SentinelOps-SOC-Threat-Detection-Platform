@@ -10,6 +10,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { api } from '../api';
+import LiveAlertTicker from '../components/LiveAlertTicker';
 
 // Fallback mock data (shown when backend is unavailable)
 const defaultStats = {
@@ -229,6 +230,10 @@ export default function Dashboard() {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
+            </motion.div>
+
+            <motion.div variants={item} style={{ marginBottom: 20 }}>
+                <LiveAlertTicker max={8} />
             </motion.div>
 
             <motion.div variants={item} className="chart-grid">

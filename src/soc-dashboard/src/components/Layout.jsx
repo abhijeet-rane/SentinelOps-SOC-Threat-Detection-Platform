@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { setToken } from '../api';
+import { stop as stopAlertStream } from '../alertStream';
 import {
     Shield, LayoutDashboard, AlertTriangle, FileSearch, BarChart3,
     Settings, BookOpen, Bell, Search, LogOut, Activity, Zap, ScrollText, Database, FileText
@@ -37,7 +38,8 @@ export default function Layout() {
         return item.roles.includes(userRole);
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await stopAlertStream();                 // close the SignalR connection cleanly
         setToken(null);
         localStorage.removeItem('soc_user');
         navigate('/login');
