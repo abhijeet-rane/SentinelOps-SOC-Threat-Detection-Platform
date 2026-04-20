@@ -32,3 +32,4 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.I
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Infrastructure\bin\Debug\net10.0\LatoFont\Lato-Thin.ttf
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Infrastructure\bin\Debug\net10.0\LatoFont\Lato-ThinItalic.ttf
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Infrastructure\bin\Debug\net10.0\LatoFont\OFL.txt
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Infrastructure\obj\Debug\net10.0\SOCPlatform.Infrastructure.sourcelink.json

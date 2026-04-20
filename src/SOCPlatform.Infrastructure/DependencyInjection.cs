@@ -8,9 +8,13 @@ using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Infrastructure.Configuration;
 using SOCPlatform.Infrastructure.Data;
 using SOCPlatform.Infrastructure.Email;
+using SOCPlatform.Infrastructure.Jobs;
 using SOCPlatform.Infrastructure.Repositories;
 using SOCPlatform.Infrastructure.Resilience;
 using SOCPlatform.Infrastructure.Services;
+using SOCPlatform.Infrastructure.ThreatIntel;
+using SOCPlatform.Infrastructure.ThreatIntel.Adapters;
+using SOCPlatform.Infrastructure.ThreatIntel.Cache;
 
 namespace SOCPlatform.Infrastructure;
 
@@ -50,6 +54,14 @@ public static class DependencyInjection
         services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<ILogIngestionService, LogIngestionService>();
         services.AddScoped<ThreatIntelService>();
+
+        // ── Threat-intel adapter pipeline ──────────────────────────────────
+        services.AddSingleton<IThreatIntelCache, RedisThreatIntelCache>();
+        services.AddSingleton<IThreatFeedAdapter, AbuseIpDbAdapter>();
+        services.AddSingleton<IThreatFeedAdapter, VirusTotalAdapter>();
+        services.AddSingleton<IThreatFeedAdapter, UrlhausAdapter>();
+        services.AddScoped<ThreatFeedCoordinator>();
+        services.AddScoped<ThreatFeedSyncJob>();
 
         // ── Email sender (provider chosen via EmailOptions.Provider) ──────────
         services.AddSingleton<IEmailSender>(sp =>

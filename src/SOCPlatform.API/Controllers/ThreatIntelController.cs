@@ -1,10 +1,13 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SOCPlatform.Core.DTOs;
 using SOCPlatform.Core.Enums;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.Jobs;
 using SOCPlatform.Infrastructure.Services;
+using SOCPlatform.Infrastructure.ThreatIntel;
 
 namespace SOCPlatform.API.Controllers;
 
@@ -19,11 +22,16 @@ namespace SOCPlatform.API.Controllers;
 public class ThreatIntelController : ControllerBase
 {
     private readonly ThreatIntelService _service;
+    private readonly ThreatFeedCoordinator _coordinator;
     private readonly SOCDbContext _db;
 
-    public ThreatIntelController(ThreatIntelService service, SOCDbContext db)
+    public ThreatIntelController(
+        ThreatIntelService service,
+        ThreatFeedCoordinator coordinator,
+        SOCDbContext db)
     {
         _service = service;
+        _coordinator = coordinator;
         _db = db;
     }
 
@@ -233,13 +241,38 @@ public class ThreatIntelController : ControllerBase
     // ──────────────── Enrichment ────────────────
 
     /// <summary>
-    /// Enrich a single value (IP, domain, hash, URL, email) against all active indicators.
+    /// Enrich a single value (IP, domain, hash, URL, email) against the local IOC
+    /// table AND, when <c>useExternal=true</c> (default), every registered live
+    /// adapter (AbuseIPDB, VirusTotal, …). Cache-first per adapter.
     /// </summary>
     [HttpPost("enrich")]
     public async Task<IActionResult> Enrich([FromBody] EnrichmentRequest request)
     {
-        var result = await _service.EnrichAsync(request.Value, request.Type);
+        IndicatorType? typeEnum = null;
+        if (!string.IsNullOrWhiteSpace(request.Type) &&
+            Enum.TryParse<IndicatorType>(request.Type, true, out var parsed))
+            typeEnum = parsed;
+
+        var result = await _coordinator.EnrichAsync(request.Value, typeEnum, request.UseExternal);
         return Ok(new { success = true, data = result });
+    }
+
+    /// <summary>List every registered threat-feed adapter.</summary>
+    [HttpGet("sources")]
+    public IActionResult GetSources() =>
+        Ok(new { success = true, data = new { sources = _coordinator.AdapterNames } });
+
+    /// <summary>
+    /// Trigger an immediate bulk sync of every adapter that exposes a feed.
+    /// Enqueued via Hangfire so it runs out-of-band.
+    /// </summary>
+    [HttpPost("sync")]
+    [Authorize(Policy = "ManageRules")]
+    public IActionResult SyncNow()
+    {
+        var jobId = BackgroundJob.Enqueue<ThreatFeedSyncJob>(
+            job => job.RunAsync(CancellationToken.None));
+        return Accepted(new { success = true, message = "Threat-feed sync enqueued", data = new { jobId } });
     }
 
     /// <summary>
@@ -287,6 +320,9 @@ public class EnrichmentRequest
 {
     public string Value { get; set; } = string.Empty;
     public string? Type { get; set; }
+
+    /// <summary>When true (default), live adapter calls run for cache misses.</summary>
+    public bool UseExternal { get; set; } = true;
 }
 
 public class LogEnrichmentRequest

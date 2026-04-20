@@ -6,6 +6,7 @@ using SOCPlatform.Core.DTOs;
 using SOCPlatform.Core.Entities;
 using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.ThreatIntel;
 
 namespace SOCPlatform.Infrastructure.Services;
 
@@ -17,15 +18,18 @@ public class LogIngestionService : ILogIngestionService
 {
     private readonly SOCDbContext _context;
     private readonly Channel<Log> _processingChannel;
+    private readonly ThreatFeedCoordinator _threatFeedCoordinator;
     private readonly ILogger<LogIngestionService> _logger;
 
     public LogIngestionService(
         SOCDbContext context,
         Channel<Log> processingChannel,
+        ThreatFeedCoordinator threatFeedCoordinator,
         ILogger<LogIngestionService> logger)
     {
         _context = context;
         _processingChannel = processingChannel;
+        _threatFeedCoordinator = threatFeedCoordinator;
         _logger = logger;
     }
 
@@ -95,66 +99,55 @@ public class LogIngestionService : ILogIngestionService
 
     /// <summary>
     /// Enrich a log with threat intelligence data (called from background worker).
+    /// Hot-path uses local-DB-only matches via ThreatFeedCoordinator (useExternal=false)
+    /// — the local DB is kept current by ThreatFeedSyncJob's bulk pulls every 6h,
+    /// so we never burn external API budget on per-log lookups.
     /// </summary>
     public async Task EnrichLogAsync(Log log)
     {
-        var enrichments = new Dictionary<string, object>();
+        var matches = await _threatFeedCoordinator.EnrichLogFieldsAsync(
+            sourceIp: log.SourceIP,
+            destIp: null,
+            fileHash: null,
+            domain: log.Hostname,
+            useExternal: false);
 
-        // Check source IP against threat intel indicators
-        if (!string.IsNullOrEmpty(log.SourceIP))
+        if (matches.Count == 0) return;
+
+        // Pick the highest threat level across all matches to elevate log severity
+        var highestLevel = matches
+            .SelectMany(r => r.Matches)
+            .Select(m => m.ThreatLevel)
+            .OrderByDescending(SeverityRank)
+            .FirstOrDefault();
+
+        if (!string.IsNullOrEmpty(highestLevel))
+            log.Severity = ElevateSeverity(log.Severity, highestLevel);
+
+        log.NormalizedData = JsonSerializer.Serialize(new
         {
-            var ipThreat = await _context.ThreatIntelIndicators
-                .Where(t => t.IsActive &&
-                            t.IndicatorType == Core.Enums.IndicatorType.IpAddress &&
-                            t.Value == log.SourceIP)
-                .Select(t => new { t.ThreatLevel, t.Description, t.Source })
-                .FirstOrDefaultAsync();
-
-            if (ipThreat != null)
+            threatIntel = new
             {
-                enrichments["threatIntel"] = new
+                matched = true,
+                matchCount = matches.Sum(r => r.MatchCount),
+                fields = matches.Select(r => new
                 {
-                    matched = true,
-                    indicator = "IpAddress",
-                    ipThreat.ThreatLevel,
-                    ipThreat.Description,
-                    ipThreat.Source
-                };
-                log.Severity = ElevateSeverity(log.Severity, ipThreat.ThreatLevel);
+                    field = r.QueryType,
+                    value = r.QueryValue,
+                    sources = r.Matches.Select(m => m.Source).Distinct(),
+                    highestThreat = r.Matches.OrderByDescending(m => SeverityRank(m.ThreatLevel)).FirstOrDefault()?.ThreatLevel
+                })
             }
-        }
+        });
 
-        // Check hostname against domain indicators
-        if (!string.IsNullOrEmpty(log.Hostname))
-        {
-            var domainThreat = await _context.ThreatIntelIndicators
-                .Where(t => t.IsActive &&
-                            t.IndicatorType == Core.Enums.IndicatorType.Domain &&
-                            t.Value == log.Hostname)
-                .Select(t => new { t.ThreatLevel, t.Description, t.Source })
-                .FirstOrDefaultAsync();
-
-            if (domainThreat != null)
-            {
-                enrichments["domainThreat"] = new
-                {
-                    matched = true,
-                    indicator = "Domain",
-                    domainThreat.ThreatLevel,
-                    domainThreat.Description,
-                    domainThreat.Source
-                };
-                log.Severity = ElevateSeverity(log.Severity, domainThreat.ThreatLevel);
-            }
-        }
-
-        if (enrichments.Count > 0)
-        {
-            log.NormalizedData = JsonSerializer.Serialize(enrichments);
-            _context.Logs.Update(log);
-            await _context.SaveChangesAsync();
-        }
+        _context.Logs.Update(log);
+        await _context.SaveChangesAsync();
     }
+
+    private static int SeverityRank(string? level) => level?.ToLowerInvariant() switch
+    {
+        "critical" => 4, "high" => 3, "medium" => 2, "low" => 1, _ => 0
+    };
 
     /// <summary>
     /// Normalize a DTO into a Log entity with common event schema.

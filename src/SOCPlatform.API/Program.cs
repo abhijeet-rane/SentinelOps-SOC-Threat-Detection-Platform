@@ -27,6 +27,7 @@ using SOCPlatform.Detection.Rules;
 using SOCPlatform.Infrastructure;
 using SOCPlatform.Infrastructure.Configuration;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.Jobs;
 using SOCPlatform.Infrastructure.Services;
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -345,7 +346,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
-// Hangfire dashboard (Admin only) — disabled in Testing (see Hangfire registration above)
+// Hangfire dashboard + recurring jobs (disabled in Testing — see Hangfire registration above)
 if (!app.Environment.IsEnvironment("Testing"))
 {
     app.UseHangfireDashboard("/hangfire", new DashboardOptions
@@ -353,6 +354,16 @@ if (!app.Environment.IsEnvironment("Testing"))
         Authorization = [new HangfireDashboardAuthFilter()],
         DashboardTitle = "SentinelOps · Background Jobs"
     });
+
+    // Threat-feed bulk sync every 6 hours.
+    // Cron: minute=0, every 6th hour, every day. Uses RecurringJobManager directly
+    // so the job is (re-)registered idempotently on every startup.
+    var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+    recurringJobs.AddOrUpdate<ThreatFeedSyncJob>(
+        recurringJobId: ThreatFeedSyncJob.RecurringJobId,
+        methodCall: job => job.RunAsync(CancellationToken.None),
+        cronExpression: "0 */6 * * *",
+        options: new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 }
 
 // OpenAPI + Scalar
