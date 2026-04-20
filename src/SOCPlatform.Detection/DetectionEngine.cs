@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,6 +7,7 @@ using SOCPlatform.Core.Entities;
 using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Detection.Rules;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.Observability;
 
 namespace SOCPlatform.Detection;
 
@@ -58,6 +60,10 @@ public class DetectionEngine : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SOCDbContext>();
+        var metrics = scope.ServiceProvider.GetService<SocMetrics>();
+
+        // Trace span for the full cycle (visible in Jaeger when OTLP exporter is enabled)
+        using var activity = SocActivitySource.Instance.StartActivity("detection.cycle", ActivityKind.Internal);
 
         var since = _lastEvaluationTime;
         _lastEvaluationTime = DateTime.UtcNow;
@@ -79,9 +85,14 @@ public class DetectionEngine : BackgroundService
 
         foreach (var rule in _rules.Where(r => r.IsEnabled))
         {
+            var ruleTag = new KeyValuePair<string, object?>("rule", rule.Name);
+            var sw = Stopwatch.StartNew();
             try
             {
                 var alerts = await rule.EvaluateAsync(recentEvents, ct);
+                sw.Stop();
+                metrics?.DetectionDurationMs.Record(sw.Elapsed.TotalMilliseconds, ruleTag);
+
                 if (alerts.Count > 0)
                 {
                     _logger.LogInformation("Rule '{RuleName}' generated {AlertCount} alert(s)",
@@ -95,6 +106,11 @@ public class DetectionEngine : BackgroundService
                     {
                         alert.DetectionRuleId = dbRule?.Id;
                         alert.SlaDeadline = CalculateSlaDeadline(alert.Severity);
+
+                        // Counter: one hit per alert, tagged by severity + rule
+                        metrics?.AlertsTotal.Add(1,
+                            new KeyValuePair<string, object?>("severity", alert.Severity.ToString()),
+                            ruleTag);
                     }
 
                     allAlerts.AddRange(alerts);
@@ -102,9 +118,15 @@ public class DetectionEngine : BackgroundService
             }
             catch (Exception ex)
             {
+                sw.Stop();
                 _logger.LogError(ex, "Error evaluating rule '{RuleName}'", rule.Name);
+                activity?.AddEvent(new ActivityEvent("rule.error",
+                    tags: new ActivityTagsCollection { { "rule", rule.Name }, { "error", ex.Message } }));
             }
         }
+
+        activity?.SetTag("alerts.generated", allAlerts.Count);
+        activity?.SetTag("events.processed", recentEvents.Count);
 
         if (allAlerts.Count > 0)
         {

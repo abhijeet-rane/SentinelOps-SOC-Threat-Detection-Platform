@@ -50,6 +50,17 @@
 
     <!-- Dev: load .env.local automatically -->
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
+
+    <!-- OpenTelemetry (Phase 6) -->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.10.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.10.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.10.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.10.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.10.0-beta.1" />
+
+    <!-- Serilog bridge — enriches log lines with TraceId / SpanId from Activity -->
+    <PackageReference Include="Serilog.Enrichers.Span" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,8 +15,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.Enrichers.Span;
 using SOCPlatform.API.Authorization;
 using SOCPlatform.API.ExceptionHandlers;
 using SOCPlatform.API.HealthChecks;
@@ -30,6 +34,7 @@ using SOCPlatform.Infrastructure;
 using SOCPlatform.Infrastructure.Configuration;
 using SOCPlatform.Infrastructure.Data;
 using SOCPlatform.Infrastructure.Jobs;
+using SOCPlatform.Infrastructure.Observability;
 using SOCPlatform.Infrastructure.Services;
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -55,6 +60,7 @@ builder.Host.UseSerilog((ctx, services, lc) => lc
     .Enrich.FromLogContext()
     .Enrich.WithMachineName()
     .Enrich.WithThreadId()
+    .Enrich.WithSpan()                     // ← TraceId + SpanId from current Activity
     .Enrich.WithProperty("Application", "SOCPlatform.API")
     .Enrich.WithProperty("Environment", ctx.HostingEnvironment.EnvironmentName)
     .WriteTo.Console(new Serilog.Formatting.Compact.RenderedCompactJsonFormatter())
@@ -68,6 +74,41 @@ builder.Host.UseSerilog((ctx, services, lc) => lc
 // 3. Infrastructure (DB, repositories, services, options, resilient HttpClients)
 // ────────────────────────────────────────────────────────────────────────────
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ────────────────────────────────────────────────────────────────────────────
+// 3b. OpenTelemetry (metrics + traces)
+// ────────────────────────────────────────────────────────────────────────────
+// Prometheus scrape endpoint at /metrics (see pipeline below).
+// OTLP traces only if OTEL_EXPORTER_OTLP_ENDPOINT is set (Jaeger all-in-one
+// default: http://localhost:4317). Metrics go through Prometheus regardless.
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    var serviceName = "SOCPlatform.API";
+    var otlpEndpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(r => r.AddService(serviceName, serviceVersion: "1.0.0"))
+        .WithMetrics(m => m
+            .AddMeter(SocMetrics.MeterName)
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter())
+        .WithTracing(t =>
+        {
+            t.AddSource(SocActivitySource.Name)
+             .AddAspNetCoreInstrumentation(o => o.Filter = ctx =>
+                 // Don't spam traces for metrics scrapes and health probes
+                 !ctx.Request.Path.StartsWithSegments("/metrics") &&
+                 !ctx.Request.Path.StartsWithSegments("/health"))
+             .AddHttpClientInstrumentation();
+
+            if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            {
+                t.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
+            }
+        });
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // 4. Detection Engine + Playbook Engine
@@ -357,6 +398,13 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<AlertHub>("/hubs/alerts");
 
+// Prometheus scrape endpoint. Secured by network boundary in prod;
+// dev is fine as-is because nothing sensitive is exposed.
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.MapPrometheusScrapingEndpoint("/metrics");
+}
+
 // Health endpoints
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
@@ -396,6 +444,14 @@ if (!app.Environment.IsEnvironment("Testing"))
         recurringJobId: ApprovalTimeoutEscalationJob.RecurringJobId,
         methodCall: job => job.RunAsync(CancellationToken.None),
         cronExpression: "*/5 * * * *",
+        options: new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+    // SLA-breach counter: every minute, count newly-breached alerts into the
+    // socp_sla_breaches_total Prometheus counter.
+    recurringJobs.AddOrUpdate<SlaBreachTrackerJob>(
+        recurringJobId: SlaBreachTrackerJob.RecurringJobId,
+        methodCall: job => job.RunAsync(CancellationToken.None),
+        cronExpression: "* * * * *",
         options: new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 }
 

@@ -1,0 +1,146 @@
+{
+  "title": "SentinelOps SOC · Operational Metrics",
+  "uid": "sentinelops-soc",
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "",
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["sentinelops", "soc", "security"],
+  "templating": {
+    "list": [
+      {
+        "name": "severity",
+        "label": "Severity",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(socp_alerts_total, severity)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Alerts (last 1h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum(increase(socp_alerts_total[1h]))", "legendFormat": "total" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Critical alerts (last 1h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "sum(increase(socp_alerts_total{severity=\"Critical\"}[1h]))", "legendFormat": "critical" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "SLA breaches (last 1h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "sum(increase(socp_sla_breaches_total[1h]))", "legendFormat": "breaches" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } } }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Logs ingested/min",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(socp_ingestion_logs_total[1m]) * 60)", "legendFormat": "logs/min" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Alert rate by severity",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "targets": [
+        {
+          "expr": "sum by (severity) (rate(socp_alerts_total{severity=~\"$severity\"}[5m]) * 60)",
+          "legendFormat": "{{severity}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Detection duration (p50 / p95) per rule",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le, rule) (rate(socp_detection_duration_ms_bucket[5m])))", "legendFormat": "p50 {{rule}}" },
+        { "expr": "histogram_quantile(0.95, sum by (le, rule) (rate(socp_detection_duration_ms_bucket[5m])))", "legendFormat": "p95 {{rule}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "SLA breaches by severity",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "targets": [
+        { "expr": "sum by (severity) (rate(socp_sla_breaches_total[5m]) * 60)", "legendFormat": "{{severity}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "ML inference latency (p50 / p95) per model",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le, model) (rate(socp_ml_inference_duration_ms_bucket[5m])))", "legendFormat": "p50 {{model}}" },
+        { "expr": "histogram_quantile(0.95, sum by (le, model) (rate(socp_ml_inference_duration_ms_bucket[5m])))", "legendFormat": "p95 {{model}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "HTTP requests by status",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "targets": [
+        {
+          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count[5m]) * 60)",
+          "legendFormat": "{{http_response_status_code}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Process memory & GC pressure",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "targets": [
+        { "expr": "process_runtime_dotnet_gc_heap_size_bytes / 1024 / 1024", "legendFormat": "heap MB ({{generation}})" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } }
+    }
+  ]
+}

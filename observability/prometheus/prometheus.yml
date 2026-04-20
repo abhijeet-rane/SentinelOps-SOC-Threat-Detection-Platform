@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Scrape the SentinelOps API /metrics endpoint.
+  # host.docker.internal resolves to the Docker host from inside the container,
+  # which is where `dotnet run` listens (port 5101).
+  - job_name: "sentinelops-api"
+    metrics_path: /metrics
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["host.docker.internal:5101"]
+        labels:
+          service: "sentinelops-api"
+          env: "dev"

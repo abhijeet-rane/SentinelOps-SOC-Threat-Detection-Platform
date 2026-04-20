@@ -6,6 +6,7 @@ using SOCPlatform.Core.DTOs;
 using SOCPlatform.Core.Entities;
 using SOCPlatform.Core.Interfaces;
 using SOCPlatform.Infrastructure.Data;
+using SOCPlatform.Infrastructure.Observability;
 using SOCPlatform.Infrastructure.ThreatIntel;
 
 namespace SOCPlatform.Infrastructure.Services;
@@ -19,19 +20,27 @@ public class LogIngestionService : ILogIngestionService
     private readonly SOCDbContext _context;
     private readonly Channel<Log> _processingChannel;
     private readonly ThreatFeedCoordinator _threatFeedCoordinator;
+    private readonly SocMetrics _metrics;
     private readonly ILogger<LogIngestionService> _logger;
 
     public LogIngestionService(
         SOCDbContext context,
         Channel<Log> processingChannel,
         ThreatFeedCoordinator threatFeedCoordinator,
+        SocMetrics metrics,
         ILogger<LogIngestionService> logger)
     {
         _context = context;
         _processingChannel = processingChannel;
         _threatFeedCoordinator = threatFeedCoordinator;
+        _metrics = metrics;
         _logger = logger;
     }
+
+    private void RecordIngestion(Log log) =>
+        _metrics.IngestionLogsTotal.Add(1,
+            new KeyValuePair<string, object?>("source", log.Source ?? "unknown"),
+            new KeyValuePair<string, object?>("severity", log.Severity ?? "Low"));
 
     /// <summary>
     /// Ingest a single log entry: normalize, persist, and queue for background enrichment.
@@ -46,6 +55,7 @@ public class LogIngestionService : ILogIngestionService
         // Queue for background enrichment (non-blocking)
         await _processingChannel.Writer.WriteAsync(log);
 
+        RecordIngestion(log);
         _logger.LogDebug("Ingested log {Id} from endpoint {EndpointId}", log.Id, log.EndpointId);
         return log.Id;
     }
@@ -78,10 +88,11 @@ public class LogIngestionService : ILogIngestionService
             _context.Logs.AddRange(logs);
             await _context.SaveChangesAsync();
 
-            // Queue all for background enrichment
+            // Queue all for background enrichment + record metric per log
             foreach (var log in logs)
             {
                 await _processingChannel.Writer.WriteAsync(log);
+                RecordIngestion(log);
             }
         }
 

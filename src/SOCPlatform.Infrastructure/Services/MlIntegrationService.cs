@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using SOCPlatform.Infrastructure.Observability;
 
 namespace SOCPlatform.Infrastructure.Services;
 
@@ -12,6 +14,7 @@ namespace SOCPlatform.Infrastructure.Services;
 public class MlIntegrationService
 {
     private readonly HttpClient _http;
+    private readonly SocMetrics? _metrics;
     private readonly ILogger<MlIntegrationService> _logger;
     private static readonly JsonSerializerOptions _jsonOpts = new()
     {
@@ -19,9 +22,10 @@ public class MlIntegrationService
         PropertyNameCaseInsensitive = true,
     };
 
-    public MlIntegrationService(HttpClient http, ILogger<MlIntegrationService> logger)
+    public MlIntegrationService(HttpClient http, ILogger<MlIntegrationService> logger, SocMetrics? metrics = null)
     {
         _http = http;
+        _metrics = metrics;
         _logger = logger;
     }
 
@@ -30,14 +34,24 @@ public class MlIntegrationService
     /// </summary>
     public async Task<MlAnalyzeResult?> AnalyzeEventAsync(MlAnalyzeRequest request)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             var response = await _http.PostAsJsonAsync("/api/ml/analyze", request, _jsonOpts);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<MlAnalyzeResult>(_jsonOpts);
+            var result = await response.Content.ReadFromJsonAsync<MlAnalyzeResult>(_jsonOpts);
+            sw.Stop();
+            _metrics?.MlInferenceDurationMs.Record(sw.Elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("model", result?.ModelUsed ?? "auto"),
+                new KeyValuePair<string, object?>("outcome", "ok"));
+            return result;
         }
         catch (Exception ex)
         {
+            sw.Stop();
+            _metrics?.MlInferenceDurationMs.Record(sw.Elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("model", "unknown"),
+                new KeyValuePair<string, object?>("outcome", "error"));
             _logger.LogWarning(ex, "ML analysis request failed");
             return null;
         }
@@ -48,12 +62,18 @@ public class MlIntegrationService
     /// </summary>
     public async Task<MlTrainResult?> TriggerTrainingAsync(string model = "all", List<Dictionary<string, object>>? events = null)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             var payload = new { model, events };
             var response = await _http.PostAsJsonAsync("/api/ml/train", payload, _jsonOpts);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<MlTrainResult>(_jsonOpts);
+            var result = await response.Content.ReadFromJsonAsync<MlTrainResult>(_jsonOpts);
+            sw.Stop();
+            _metrics?.MlInferenceDurationMs.Record(sw.Elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("model", model),
+                new KeyValuePair<string, object?>("outcome", "train"));
+            return result;
         }
         catch (Exception ex)
         {

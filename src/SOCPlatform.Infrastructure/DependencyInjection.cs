@@ -10,6 +10,7 @@ using SOCPlatform.Infrastructure.Configuration;
 using SOCPlatform.Infrastructure.Data;
 using SOCPlatform.Infrastructure.Email;
 using SOCPlatform.Infrastructure.Jobs;
+using SOCPlatform.Infrastructure.Observability;
 using SOCPlatform.Infrastructure.Repositories;
 using SOCPlatform.Infrastructure.Resilience;
 using SOCPlatform.Infrastructure.Services;
@@ -135,6 +136,12 @@ public static class DependencyInjection
 
         // ── Audit interceptor ─────────────────────────────────────────────────
         services.AddSingleton<AuditSaveChangesInterceptor>();
+
+        // ── Observability (Phase 6) ───────────────────────────────────────────
+        // IMeterFactory is registered by Microsoft.Extensions.Hosting. SocMetrics
+        // is singleton so every component shares the same Counter/Histogram.
+        services.AddSingleton<SocMetrics>();
+        services.AddScoped<SlaBreachTrackerJob>();
 
         return services;
     }

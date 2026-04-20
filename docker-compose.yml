@@ -70,10 +70,61 @@ services:
       - "8025:8025"      # Web UI → http://localhost:8025
     restart: unless-stopped
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # Observability stack (Phase 6) — Jaeger · Prometheus · Grafana
+  # Opt-in via profile so developers who don't need them aren't paying RAM.
+  # Start with: `docker compose --profile observability up -d`
+  # ─────────────────────────────────────────────────────────────────────────
+  jaeger:
+    profiles: ["observability"]
+    image: jaegertracing/all-in-one:1.60
+    container_name: soc-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"    # Jaeger UI
+      - "4317:4317"      # OTLP gRPC — SOC API sends traces here
+      - "4318:4318"      # OTLP HTTP
+    restart: unless-stopped
+
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v2.55.0
+    container_name: soc-prometheus
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"      # Prometheus UI → http://localhost:9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # so the container can scrape API on the host
+    restart: unless-stopped
+
+  grafana:
+    profiles: ["observability"]
+    image: grafana/grafana:11.3.0
+    container_name: soc-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: SocGrafana2026
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana:/etc/grafana/provisioning/dashboards-src:ro
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"      # Grafana → http://localhost:3000
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
   rabbitmq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local
