@@ -7,7 +7,8 @@ using SOCPlatform.Core.Interfaces;
 namespace SOCPlatform.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

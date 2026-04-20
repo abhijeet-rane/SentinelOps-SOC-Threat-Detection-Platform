@@ -13,7 +13,8 @@ namespace SOCPlatform.API.Controllers;
 /// Manages IOC lifecycle, enrichment lookups, bulk feed import, and statistics.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class ThreatIntelController : ControllerBase
 {

@@ -11,7 +11,8 @@ namespace SOCPlatform.API.Controllers;
 /// Authenticated via API key (X-API-Key header) with optional HMAC request signing.
 /// </summary>
 [ApiController]
-[Route("api/logs")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/logs")]
 [AllowAnonymous] // API key auth is handled by middleware, not JWT
 public class LogIngestionController : ControllerBase
 {

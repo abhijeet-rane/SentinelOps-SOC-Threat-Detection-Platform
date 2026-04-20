@@ -11,7 +11,8 @@ namespace SOCPlatform.API.Controllers;
 /// Unified dashboard endpoints for analytics KPIs, trends, analyst performance, and MITRE coverage.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class DashboardController : ControllerBase
 {

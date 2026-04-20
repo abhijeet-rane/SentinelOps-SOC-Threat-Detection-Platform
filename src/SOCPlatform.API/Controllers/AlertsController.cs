@@ -12,7 +12,8 @@ namespace SOCPlatform.API.Controllers;
 /// Alert lifecycle management: CRUD, filtering, pagination, assignment, status transitions, SLA tracking.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class AlertsController : ControllerBase
 {

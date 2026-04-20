@@ -12,7 +12,8 @@ namespace SOCPlatform.API.Controllers;
 /// SOAR Playbook management: CRUD, execution history, analyst approval workflow.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class PlaybooksController : ControllerBase
 {

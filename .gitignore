@@ -37,8 +37,7 @@ desktop.ini
 *~
 
 # Environment / secrets
-.env
-.env.*
+.env.local
 appsettings.Development.json
 
 # Python

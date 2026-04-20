@@ -11,7 +11,8 @@ namespace SOCPlatform.API.Controllers;
 /// API for managing detection rules: CRUD, enable/disable, and listing with MITRE ATT&CK mapping.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class DetectionRulesController : ControllerBase
 {

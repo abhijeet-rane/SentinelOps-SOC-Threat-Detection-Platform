@@ -10,7 +10,8 @@ namespace SOCPlatform.API.Controllers;
 /// Provides analyze, train, and status endpoints.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class MlController : ControllerBase
 {

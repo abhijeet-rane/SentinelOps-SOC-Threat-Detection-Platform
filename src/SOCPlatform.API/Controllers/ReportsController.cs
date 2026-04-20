@@ -10,7 +10,8 @@ namespace SOCPlatform.API.Controllers;
 /// analyst performance, compliance mapping, with PDF/Excel export.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class ReportsController : ControllerBase
 {

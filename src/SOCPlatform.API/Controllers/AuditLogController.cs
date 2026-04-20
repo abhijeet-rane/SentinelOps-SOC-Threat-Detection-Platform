@@ -10,7 +10,8 @@ namespace SOCPlatform.API.Controllers;
 /// Audit log viewer: paginated, filterable, with hash-chain integrity verification.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class AuditLogController : ControllerBase
 {

@@ -47,11 +47,11 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     // Covers OWASP A01: Broken Access Control (missing auth = 401)
 
     [Theory]
-    [InlineData("GET",  "/api/alerts")]
-    [InlineData("GET",  "/api/incidents")]
-    [InlineData("GET",  "/api/dashboard/analytics")]
-    [InlineData("GET",  "/api/auditlog")]
-    [InlineData("GET",  "/api/ml/status")]
+    [InlineData("GET",  "/api/v1/alerts")]
+    [InlineData("GET",  "/api/v1/incidents")]
+    [InlineData("GET",  "/api/v1/dashboard/analytics")]
+    [InlineData("GET",  "/api/v1/auditlog")]
+    [InlineData("GET",  "/api/v1/ml/status")]
     public async Task Unauthenticated_Request_Returns_401(string method, string path)
     {
         var response = await AnonymousClient()
@@ -71,7 +71,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [InlineData("ReadOnly")]
     public async Task GET_Alerts_Allowed_For_All_Authenticated_Roles(string role)
     {
-        var response = await ClientFor(role).GetAsync("/api/alerts");
+        var response = await ClientFor(role).GetAsync("/api/v1/alerts");
         response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden,
             because: $"GET /api/alerts has no policy, role '{role}' should be allowed");
@@ -88,7 +88,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [InlineData("ReadOnly")]
     public async Task GET_Reports_Daily_Allowed_For_All_Authenticated_Roles(string role)
     {
-        var response = await ClientFor(role).GetAsync("/api/reports/daily");
+        var response = await ClientFor(role).GetAsync("/api/v1/reports/daily");
         response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden,
             because: $"GET /api/reports/daily has no action-level policy, role '{role}' should be allowed");
@@ -101,7 +101,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [InlineData("SOC Manager")]
     public async Task GET_AuditLog_Allowed_For_Roles_With_ViewAuditLogs_Permission(string role)
     {
-        var response = await ClientFor(role).GetAsync("/api/auditlog");
+        var response = await ClientFor(role).GetAsync("/api/v1/auditlog");
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden,
             because: $"role '{role}' has ViewAuditLogs permission");
         response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
@@ -113,7 +113,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [InlineData("ReadOnly")]
     public async Task GET_AuditLog_Forbidden_For_Roles_Without_ViewAuditLogs_Permission(string role)
     {
-        var response = await ClientFor(role).GetAsync("/api/auditlog");
+        var response = await ClientFor(role).GetAsync("/api/v1/auditlog");
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             because: $"role '{role}' does not have ViewAuditLogs permission");
     }
@@ -123,7 +123,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [Fact]
     public async Task GET_Auth_Users_Allowed_For_Admin_With_ManageUsers_Permission()
     {
-        var response = await ClientFor("Admin").GetAsync("/api/auth/users");
+        var response = await ClientFor("Admin").GetAsync("/api/v1/auth/users");
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden,
             because: "Admin has ManageUsers permission");
         response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
@@ -136,7 +136,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     [InlineData("ReadOnly")]
     public async Task GET_Auth_Users_Forbidden_For_Roles_Without_ManageUsers_Permission(string role)
     {
-        var response = await ClientFor(role).GetAsync("/api/auth/users");
+        var response = await ClientFor(role).GetAsync("/api/v1/auth/users");
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             because: $"role '{role}' does not have ManageUsers permission");
     }
@@ -149,7 +149,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     public async Task POST_ML_Train_Allowed_For_Admin_And_SocManager(string role)
     {
         var content = new StringContent("{\"model\":\"all\"}", Encoding.UTF8, "application/json");
-        var response = await ClientFor(role).PostAsync("/api/ml/train", content);
+        var response = await ClientFor(role).PostAsync("/api/v1/ml/train", content);
         // 200 OK or 503 (ML Python service offline during tests) — never 401/403
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden,
             because: $"role '{role}' matches Roles = 'Admin,SOC Manager' attribute");
@@ -163,7 +163,7 @@ public class RbacPermissionTests : IClassFixture<SocApiFactory>
     public async Task POST_ML_Train_Forbidden_For_Non_Manager_Roles(string role)
     {
         var content = new StringContent("{\"model\":\"all\"}", Encoding.UTF8, "application/json");
-        var response = await ClientFor(role).PostAsync("/api/ml/train", content);
+        var response = await ClientFor(role).PostAsync("/api/v1/ml/train", content);
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             because: $"role '{role}' is not in Roles = 'Admin,SOC Manager'");
     }

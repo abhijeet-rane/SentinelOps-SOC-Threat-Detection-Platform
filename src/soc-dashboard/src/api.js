@@ -1,5 +1,5 @@
 // ── SOC Platform API Client – Connected to Real Backend ──
-const API_BASE = 'http://localhost:5101/api';
+const API_BASE = 'http://localhost:5101/api/v1';
 
 let authToken = localStorage.getItem('soc_token') || null;
 

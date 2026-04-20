@@ -14,7 +14,8 @@ namespace SOCPlatform.API.Controllers;
 /// Incident case management: CRUD, analyst notes, evidence attachments, timeline, root cause tracking.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class IncidentsController : ControllerBase
 {

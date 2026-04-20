@@ -1,5 +1,5 @@
 ﻿SOCPlatform.DesktopAgent
-
+1.0.0.0
 
 winexe
 C#
@@ -12,8 +12,8 @@ TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_O
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.DesktopAgent\App.xaml
 11407045341
 
-14-1832892321
-2482128721080
+161776547614
+2482067382733
 MainWindow.xaml;
 
 False

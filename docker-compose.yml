@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
-  # ──────────────────────────────────────
-  #  PostgreSQL Database (Local Dev)
-  # ──────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────
+  # PostgreSQL — primary datastore + Hangfire job storage
+  # ─────────────────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: soc-postgres
@@ -22,6 +20,60 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # Redis — distributed cache + SignalR backplane + rate-limit counters
+  # ─────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: soc-redis
+    command: ["redis-server", "--requirepass", "SocRedisDev2026", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "SocRedisDev2026", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # RabbitMQ — log ingestion message queue (replaces in-proc Channel<T>)
+  # ─────────────────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: soc-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: socadmin
+      RABBITMQ_DEFAULT_PASS: SocRabbitDev2026
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI → http://localhost:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # MailHog — fake SMTP server for local email testing
+  # ─────────────────────────────────────────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: soc-mailhog
+    ports:
+      - "1025:1025"      # SMTP
+      - "8025:8025"      # Web UI → http://localhost:8025
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local
