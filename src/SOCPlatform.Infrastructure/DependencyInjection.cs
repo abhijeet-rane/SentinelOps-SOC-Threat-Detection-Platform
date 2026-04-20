@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddOptionsWithValidation<RabbitMqOptions>(configuration, RabbitMqOptions.SectionName);
         services.AddOptionsWithValidation<EmailOptions>(configuration, EmailOptions.SectionName);
         services.AddOptionsWithValidation<MlServiceOptions>(configuration, MlServiceOptions.SectionName);
+        services.AddOptionsWithValidation<AuthOptions>(configuration, AuthOptions.SectionName);
 
         services.Configure<ThreatIntelOptions>(configuration.GetSection(ThreatIntelOptions.SectionName));
         services.Configure<CorsOptions>(configuration.GetSection(CorsOptions.SectionName));
@@ -46,6 +47,7 @@ public static class DependencyInjection
         // ── Application services ──────────────────────────────────────────────
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<ILogIngestionService, LogIngestionService>();
         services.AddScoped<ThreatIntelService>();
 

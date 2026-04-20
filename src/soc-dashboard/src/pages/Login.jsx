@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, User, Lock, ArrowRight } from 'lucide-react';
 import { api, setToken } from '../api';
@@ -132,7 +132,13 @@ export default function Login() {
                     </motion.button>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <p style={{ textAlign: 'center', marginTop: 18, fontSize: '0.8rem' }}>
+                    <Link to="/forgot-password" style={{ color: 'var(--cyan-400)', textDecoration: 'none' }}>
+                        Forgot password?
+                    </Link>
+                </p>
+
+                <p style={{ textAlign: 'center', marginTop: 12, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Protected system · Unauthorized access prohibited
                 </p>
             </motion.div>

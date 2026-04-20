@@ -12,10 +12,12 @@ namespace SOCPlatform.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IPasswordResetService _passwordReset;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IPasswordResetService passwordReset)
     {
         _authService = authService;
+        _passwordReset = passwordReset;
     }
 
     /// <summary>
@@ -51,6 +53,46 @@ public class AuthController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Initiate the password-reset flow. Always returns 202 Accepted regardless
+    /// of whether the email exists (to prevent account enumeration). If the email
+    /// matches an active account, a reset link is dispatched to it.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request, CancellationToken ct)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ua = Request.Headers.UserAgent.ToString();
+        await _passwordReset.RequestResetAsync(request, ip, ua, ct);
+        return Accepted(ApiResponse<object>.Ok(
+            new { },
+            "If the email matches an account, a password-reset link has been sent."));
+    }
+
+    /// <summary>
+    /// Complete the password-reset flow with the emailed token + new password.
+    /// On success, all refresh tokens for the user are invalidated (re-login required).
+    /// </summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request, CancellationToken ct)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ua = Request.Headers.UserAgent.ToString();
+        try
+        {
+            await _passwordReset.ResetPasswordAsync(request, ip, ua, ct);
+            return Ok(ApiResponse<object>.Ok(
+                new { },
+                "Password reset successful. Please log in with your new password."));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
         }
     }
 

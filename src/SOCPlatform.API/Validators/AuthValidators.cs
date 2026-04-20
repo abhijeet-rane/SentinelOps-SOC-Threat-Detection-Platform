@@ -55,6 +55,36 @@ public class RefreshTokenValidator : AbstractValidator<RefreshTokenRequestDto>
     }
 }
 
+public class ForgotPasswordValidator : AbstractValidator<ForgotPasswordRequestDto>
+{
+    public ForgotPasswordValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("A valid email address is required")
+            .MaximumLength(255);
+    }
+}
+
+public class ResetPasswordValidator : AbstractValidator<ResetPasswordRequestDto>
+{
+    public ResetPasswordValidator()
+    {
+        RuleFor(x => x.Token)
+            .NotEmpty().WithMessage("Reset token is required")
+            .Length(20, 256).WithMessage("Reset token format is invalid");
+
+        RuleFor(x => x.NewPassword)
+            .NotEmpty()
+            .MinimumLength(10).WithMessage("Password must be at least 10 characters")
+            .MaximumLength(128)
+            .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter")
+            .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter")
+            .Matches(@"[0-9]").WithMessage("Password must contain at least one digit")
+            .Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character");
+    }
+}
+
 public class LogIngestionValidator : AbstractValidator<LogIngestionDto>
 {
     private static readonly string[] ValidSeverities = { "Low", "Medium", "High", "Critical" };

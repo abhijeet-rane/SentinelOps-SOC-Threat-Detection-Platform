@@ -26,6 +26,7 @@ public class SOCDbContext : DbContext
     public DbSet<PlaybookExecution> PlaybookExecutions => Set<PlaybookExecution>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,26 @@ public class SOCDbContext : DbContext
                   .WithMany(r => r.Users)
                   .HasForeignKey(e => e.RoleId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ──────────────────────────────────────
+        //  PasswordResetToken
+        // ──────────────────────────────────────
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ExpiresAt);
+
+            entity.Property(e => e.TokenHash).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.RequestIpAddress).HasMaxLength(45);
+            entity.Property(e => e.RequestUserAgent).HasMaxLength(500);
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ──────────────────────────────────────
