@@ -13,7 +13,10 @@ namespace SOCPlatform.Tests.Auth;
 /// <summary>
 /// Integration tests for /api/v1/auth/forgot-password and /api/v1/auth/reset-password.
 /// Uses the existing SocApiFactory which targets the real Postgres in docker.
+/// In the same xunit collection as RbacPermissionTests so the two share the
+/// real database serially — avoids cold-start migration/seed races in CI.
 /// </summary>
+[Collection("DatabaseIntegration")]
 public class PasswordResetEndpointTests : IClassFixture<SocApiFactory>, IAsyncLifetime
 {
     private readonly SocApiFactory _factory;

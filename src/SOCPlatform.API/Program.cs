@@ -204,18 +204,23 @@ builder.Services.AddStackExchangeRedisCache(o =>
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// 11. Hangfire (Postgres backend)
+// 11. Hangfire (Postgres backend) — skipped in Testing to avoid the schema
+// installer race when multiple WebApplicationFactory<Program> instances boot
+// in parallel. No test exercises Hangfire.
 // ────────────────────────────────────────────────────────────────────────────
-var hangfireConn = builder.Configuration.GetConnectionString("Hangfire")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Hangfire connection string missing.");
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    var hangfireConn = builder.Configuration.GetConnectionString("Hangfire")
+        ?? builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Hangfire connection string missing.");
 
-builder.Services.AddHangfire(cfg => cfg
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(hangfireConn)));
-builder.Services.AddHangfireServer();
+    builder.Services.AddHangfire(cfg => cfg
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(hangfireConn)));
+    builder.Services.AddHangfireServer();
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // 12. FluentValidation
@@ -340,12 +345,15 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
-// Hangfire dashboard (Admin only)
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
+// Hangfire dashboard (Admin only) — disabled in Testing (see Hangfire registration above)
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    Authorization = [new HangfireDashboardAuthFilter()],
-    DashboardTitle = "SentinelOps · Background Jobs"
-});
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireDashboardAuthFilter()],
+        DashboardTitle = "SentinelOps · Background Jobs"
+    });
+}
 
 // OpenAPI + Scalar
 if (app.Environment.IsDevelopment())
@@ -359,16 +367,29 @@ if (app.Environment.IsDevelopment())
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Auto-migrate + seed in Development
+// Auto-migrate + seed in Development AND Testing.
+// Testing is included so CI integration tests (which use WebApplicationFactory
+// with Environment=Testing) get a populated schema without an explicit
+// `dotnet ef database update` step. EF's MigrateAsync uses a Postgres
+// advisory lock so concurrent factory startups serialize safely. The seed
+// step catches DbUpdateException to tolerate a TOCTOU race when two factories
+// race past the "if no roles exist" check at the same time.
 // ────────────────────────────────────────────────────────────────────────────
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<SOCDbContext>();
     await db.Database.MigrateAsync();
 
-    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-    await seeder.SeedAsync();
+    try
+    {
+        var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+        await seeder.SeedAsync();
+    }
+    catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+    {
+        // Concurrent factory startup raced past idempotency check — safe to ignore.
+    }
 }
 
 app.Run();

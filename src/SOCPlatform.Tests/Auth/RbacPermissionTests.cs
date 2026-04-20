@@ -20,6 +20,7 @@ namespace SOCPlatform.Tests.Auth;
 /// Verifies each role gets the right HTTP status for each endpoint,
 /// based on the actual [Authorize(Policy = "...")] / [Authorize(Roles = "...")] decorators.
 /// </summary>
+[Collection("DatabaseIntegration")]
 public class RbacPermissionTests : IClassFixture<SocApiFactory>
 {
     private readonly SocApiFactory _factory;
