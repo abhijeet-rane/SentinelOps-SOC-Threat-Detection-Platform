@@ -24,6 +24,34 @@ public class PlaybooksController : ControllerBase
         _context = context;
     }
 
+    // ── SOAR Adapter Visibility ──
+
+    /// <summary>
+    /// Return the simulated-action timeline. Drives the "Simulated" badge in the
+    /// dashboard so analysts know which adapters mutated real targets vs the
+    /// simulator that wrote here.
+    /// </summary>
+    [HttpGet("simulated-actions")]
+    public async Task<IActionResult> GetSimulatedActions(
+        [FromQuery] Guid? alertId = null,
+        [FromQuery] string? adapter = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var query = _context.SimulatedActionLogs.AsQueryable();
+        if (alertId.HasValue) query = query.Where(s => s.AlertId == alertId.Value);
+        if (!string.IsNullOrEmpty(adapter)) query = query.Where(s => s.AdapterName == adapter);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(s => s.ExecutedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new { success = true, data = new { items, total, page, pageSize } });
+    }
+
     // ── Playbook CRUD ──
 
     /// <summary>

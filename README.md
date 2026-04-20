@@ -437,7 +437,7 @@ Foundation hardening, auth polish, and the threat-intel pipeline are shipped. Re
 | **0** | Foundation hardening | Shipped | Secrets externalization · API versioning · Serilog + correlation IDs · `IExceptionHandler` · Polly · 8 health checks · Redis · RabbitMQ · MailHog · Hangfire · Scalar |
 | **1** | Auth polish | Shipped | Password reset (hashed single-use tokens) · refresh-token revocation · audit-trailed reset events |
 | **2** | Real threat intel | Shipped | `IThreatFeedAdapter` pipeline · AbuseIPDB · VirusTotal · URLhaus · Redis cache · 6 h Hangfire sync · multi-source merge |
-| **3** | Pluggable SOAR framework | Planned | `IFirewallAdapter` · `IIdentityAdapter` · `INotificationAdapter` · `IEndpointAdapter` · 3 missing actions (IsolateEndpoint · DisableUser · ResetCredentials) · approval-timeout escalation |
+| **3** | Pluggable SOAR framework | Shipped | `IFirewallAdapter` · `IIdentityAdapter` · `INotificationAdapter` · `IEndpointAdapter` · 3 missing actions (IsolateEndpoint · DisableUser · ResetCredentials) · approval-timeout escalation |
 | **4** | Advanced detection | Planned | YARA · Sigma rule engine · lateral movement · DNS tunneling · C2 beaconing · DGA · data exfil heuristics |
 | **5** | SignalR real-time | Planned | `AlertHub` (`/hubs/alerts`) · live alert ticker · toast on Critical · Redis backplane already in place |
 | **6** | Observability | Planned | OpenTelemetry traces + metrics · Prometheus `/metrics` endpoint · Grafana dashboard JSON · Jaeger (optional) |
@@ -449,8 +449,8 @@ Foundation hardening, auth polish, and the threat-intel pipeline are shipped. Re
 
 ## License
 
-MIT.
+MIT
 
 ## Author
 
-Built by Abhijeet Rane as a hands-on cybersecurity portfolio project — every layer (collectors, detection, ML, SOAR, audit) implemented end-to-end rather than glued together from off-the-shelf SIEM components.
+Built by Abhijeet Rane - every layer (collectors, detection, ML, SOAR, audit) implemented end-to-end rather than glued together from off-the-shelf SIEM components.

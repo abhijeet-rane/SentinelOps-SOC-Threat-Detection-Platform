@@ -27,6 +27,7 @@ public class SOCDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<SimulatedActionLog> SimulatedActionLogs => Set<SimulatedActionLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,23 @@ public class SOCDbContext : DbContext
                   .WithMany(r => r.Users)
                   .HasForeignKey(e => e.RoleId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ──────────────────────────────────────
+        //  SimulatedActionLog
+        // ──────────────────────────────────────
+        modelBuilder.Entity<SimulatedActionLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ExecutedAt);
+            entity.HasIndex(e => e.AlertId);
+            entity.HasIndex(e => new { e.AdapterName, e.Action });
+
+            entity.Property(e => e.AdapterName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Action).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Target).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.Property(e => e.ErrorDetail).HasMaxLength(2000);
         });
 
         // ──────────────────────────────────────

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SOCPlatform.Core.Entities;
 using SOCPlatform.Core.Interfaces;
+using SOCPlatform.Core.Soar;
 using SOCPlatform.Infrastructure.Configuration;
 using SOCPlatform.Infrastructure.Data;
 using SOCPlatform.Infrastructure.Email;
@@ -12,6 +13,8 @@ using SOCPlatform.Infrastructure.Jobs;
 using SOCPlatform.Infrastructure.Repositories;
 using SOCPlatform.Infrastructure.Resilience;
 using SOCPlatform.Infrastructure.Services;
+using SOCPlatform.Infrastructure.Soar;
+using SOCPlatform.Infrastructure.Soar.Adapters;
 using SOCPlatform.Infrastructure.ThreatIntel;
 using SOCPlatform.Infrastructure.ThreatIntel.Adapters;
 using SOCPlatform.Infrastructure.ThreatIntel.Cache;
@@ -35,6 +38,7 @@ public static class DependencyInjection
 
         services.Configure<ThreatIntelOptions>(configuration.GetSection(ThreatIntelOptions.SectionName));
         services.Configure<CorsOptions>(configuration.GetSection(CorsOptions.SectionName));
+        services.Configure<SoarOptions>(configuration.GetSection(SoarOptions.SectionName));
 
         // ── Database ──────────────────────────────────────────────────────────
         services.AddDbContext<SOCDbContext>((sp, options) =>
@@ -62,6 +66,15 @@ public static class DependencyInjection
         services.AddSingleton<IThreatFeedAdapter, UrlhausAdapter>();
         services.AddScoped<ThreatFeedCoordinator>();
         services.AddScoped<ThreatFeedSyncJob>();
+
+        // ── SOAR adapter pipeline ──────────────────────────────────────────
+        // Adapters are scoped because they touch the scoped DbContext.
+        services.AddScoped<SimulatedActionRecorder>();
+        services.AddScoped<IFirewallAdapter, SimulatedFirewallAdapter>();
+        services.AddScoped<IIdentityAdapter, SimulatedIdentityAdapter>();
+        services.AddScoped<IEndpointAdapter, SimulatedEndpointAdapter>();
+        services.AddScoped<INotificationAdapter, EmailNotificationAdapter>(); // real, via IEmailSender
+        services.AddScoped<ApprovalTimeoutEscalationJob>();
 
         // ── Email sender (provider chosen via EmailOptions.Provider) ──────────
         services.AddSingleton<IEmailSender>(sp =>

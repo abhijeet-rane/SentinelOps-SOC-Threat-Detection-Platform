@@ -80,10 +80,14 @@ builder.Services.AddSingleton<IDetectionRule, AfterHoursActivityRule>();
 builder.Services.AddHostedService<DetectionEngine>();
 builder.Services.AddHostedService<CorrelationEngine>();
 
-builder.Services.AddSingleton<IPlaybookAction, BlockIpAction>();
-builder.Services.AddSingleton<IPlaybookAction, LockAccountAction>();
-builder.Services.AddSingleton<IPlaybookAction, NotifyManagerAction>();
-builder.Services.AddSingleton<IPlaybookAction, EscalateAlertAction>();
+// SOAR actions — scoped because they pull in scoped adapters (DbContext, IEmailSender).
+builder.Services.AddScoped<IPlaybookAction, BlockIpAction>();
+builder.Services.AddScoped<IPlaybookAction, LockAccountAction>();
+builder.Services.AddScoped<IPlaybookAction, NotifyManagerAction>();
+builder.Services.AddScoped<IPlaybookAction, EscalateAlertAction>();
+builder.Services.AddScoped<IPlaybookAction, IsolateEndpointAction>();
+builder.Services.AddScoped<IPlaybookAction, DisableUserAction>();
+builder.Services.AddScoped<IPlaybookAction, ResetCredentialsAction>();
 builder.Services.AddHostedService<PlaybookEngine>();
 
 builder.Services.AddScoped<ReportService>();
@@ -355,14 +359,20 @@ if (!app.Environment.IsEnvironment("Testing"))
         DashboardTitle = "SentinelOps · Background Jobs"
     });
 
-    // Threat-feed bulk sync every 6 hours.
-    // Cron: minute=0, every 6th hour, every day. Uses RecurringJobManager directly
-    // so the job is (re-)registered idempotently on every startup.
     var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+
+    // Threat-feed bulk sync every 6 hours.
     recurringJobs.AddOrUpdate<ThreatFeedSyncJob>(
         recurringJobId: ThreatFeedSyncJob.RecurringJobId,
         methodCall: job => job.RunAsync(CancellationToken.None),
         cronExpression: "0 */6 * * *",
+        options: new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+    // SOAR approval-timeout sweep every 5 minutes.
+    recurringJobs.AddOrUpdate<ApprovalTimeoutEscalationJob>(
+        recurringJobId: ApprovalTimeoutEscalationJob.RecurringJobId,
+        methodCall: job => job.RunAsync(CancellationToken.None),
+        cronExpression: "*/5 * * * *",
         options: new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 }
 

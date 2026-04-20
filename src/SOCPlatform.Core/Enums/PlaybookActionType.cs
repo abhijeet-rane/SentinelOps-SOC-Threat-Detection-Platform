@@ -11,5 +11,6 @@ public enum PlaybookActionType
     EscalateAlert = 3,
     IsolateEndpoint = 4,
     DisableUser = 5,
+    ResetCredentials = 6,
     Custom = 99
 }

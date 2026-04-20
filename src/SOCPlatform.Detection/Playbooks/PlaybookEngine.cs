@@ -17,24 +17,20 @@ public class PlaybookEngine : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<PlaybookEngine> _logger;
-    private readonly IEnumerable<IPlaybookAction> _actions;
     private readonly TimeSpan _evaluationInterval;
 
     public PlaybookEngine(
         IServiceProvider serviceProvider,
-        ILogger<PlaybookEngine> logger,
-        IEnumerable<IPlaybookAction> actions)
+        ILogger<PlaybookEngine> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _actions = actions;
         _evaluationInterval = TimeSpan.FromSeconds(10);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Playbook Engine started with {ActionCount} registered actions",
-            _actions.Count());
+        _logger.LogInformation("Playbook Engine started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -113,6 +109,9 @@ public class PlaybookEngine : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SOCDbContext>();
 
+        // Resolve actions per-scope so DbContext / adapter dependencies are scoped correctly.
+        var actions = scope.ServiceProvider.GetServices<IPlaybookAction>().ToList();
+
         var pendingExecutions = await context.Set<PlaybookExecution>()
             .Include(pe => pe.Playbook)
             .Include(pe => pe.Alert)
@@ -122,7 +121,7 @@ public class PlaybookEngine : BackgroundService
 
         foreach (var execution in pendingExecutions)
         {
-            var handler = _actions.FirstOrDefault(a => a.ActionType == execution.Playbook.ActionType);
+            var handler = actions.FirstOrDefault(a => a.ActionType == execution.Playbook.ActionType);
             if (handler == null)
             {
                 execution.Status = "Failed";
