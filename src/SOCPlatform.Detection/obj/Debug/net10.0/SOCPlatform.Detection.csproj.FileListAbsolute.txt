@@ -35,3 +35,13 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.D
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\LatoFont\Lato-ThinItalic.ttf
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\LatoFont\OFL.txt
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\obj\Debug\net10.0\SOCPlatform.Detection.sourcelink.json
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Sigma\Definitions\mimikatz_credential_dump.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Sigma\Definitions\powershell_encoded_command.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Sigma\Definitions\psexec_remote_execution.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Sigma\Definitions\schtasks_persistence.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Sigma\Definitions\suspicious_service_installed.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Yara\Definitions\cobalt_strike.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Yara\Definitions\mimikatz.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Yara\Definitions\powershell_obfuscation.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Yara\Definitions\ransomware_notes.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Detection\bin\Debug\net10.0\Rules\Yara\Definitions\webshell.yar

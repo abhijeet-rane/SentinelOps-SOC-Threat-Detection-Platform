@@ -70,6 +70,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // ────────────────────────────────────────────────────────────────────────────
 // 4. Detection Engine + Playbook Engine
 // ────────────────────────────────────────────────────────────────────────────
+// Baseline rules
 builder.Services.AddSingleton<IDetectionRule, BruteForceRule>();
 builder.Services.AddSingleton<IDetectionRule, PrivilegeEscalationRule>();
 builder.Services.AddSingleton<IDetectionRule, PortScanRule>();
@@ -77,6 +78,18 @@ builder.Services.AddSingleton<IDetectionRule, SuspiciousHashRule>();
 builder.Services.AddSingleton<IDetectionRule, PolicyViolationRule>();
 builder.Services.AddSingleton<IDetectionRule, AccountEnumerationRule>();
 builder.Services.AddSingleton<IDetectionRule, AfterHoursActivityRule>();
+// Advanced heuristic rules (Phase 4)
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Advanced.C2BeaconingRule>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Advanced.DgaDetectionRule>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Advanced.DnsTunnelingRule>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Advanced.DataExfiltrationRule>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Advanced.LateralMovementRule>();
+// Sigma + YARA rule engines (Phase 4)
+builder.Services.AddSingleton<SOCPlatform.Detection.Rules.Sigma.SigmaRuleLoader>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Sigma.SigmaDetectionRule>();
+builder.Services.AddSingleton<SOCPlatform.Detection.Rules.Yara.YaraRuleLoader>();
+builder.Services.AddSingleton<IDetectionRule, SOCPlatform.Detection.Rules.Yara.YaraDetectionRule>();
+
 builder.Services.AddHostedService<DetectionEngine>();
 builder.Services.AddHostedService<CorrelationEngine>();
 

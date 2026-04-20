@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "0XjH/SUBo2U=",
+  "dgSpecHash": "7K/BbO+ABG0=",
   "success": true,
   "projectFilePath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Tests\\SOCPlatform.Tests.csproj",
   "expectedPackageFiles": [
@@ -153,7 +153,8 @@
     "C:\\Users\\abhij\\.nuget\\packages\\xunit.core\\2.9.3\\xunit.core.2.9.3.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\xunit.extensibility.core\\2.9.3\\xunit.extensibility.core.2.9.3.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\xunit.extensibility.execution\\2.9.3\\xunit.extensibility.execution.2.9.3.nupkg.sha512",
-    "C:\\Users\\abhij\\.nuget\\packages\\xunit.runner.visualstudio\\2.8.2\\xunit.runner.visualstudio.2.8.2.nupkg.sha512"
+    "C:\\Users\\abhij\\.nuget\\packages\\xunit.runner.visualstudio\\2.8.2\\xunit.runner.visualstudio.2.8.2.nupkg.sha512",
+    "C:\\Users\\abhij\\.nuget\\packages\\yamldotnet\\16.2.1\\yamldotnet.16.2.1.nupkg.sha512"
   ],
   "logs": []
 }

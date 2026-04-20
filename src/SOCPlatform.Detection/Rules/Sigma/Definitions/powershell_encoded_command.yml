@@ -1,0 +1,17 @@
+title: Encoded PowerShell Command
+id: sigma-powershell-encoded-001
+description: Detects PowerShell invocation with the -EncodedCommand flag (obfuscation frequently used by attackers to hide payloads).
+level: high
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.defense_evasion
+detection:
+  selection:
+    EventAction: ProcessCreate
+    ProcessName|endswith: powershell.exe
+    CommandLine|contains:
+      - -enc
+      - -encodedcommand
+      - -e JAB
+  condition: selection

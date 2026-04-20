@@ -1,0 +1,17 @@
+title: Scheduled Task Creation via schtasks.exe
+id: sigma-schtasks-001
+description: Detects scheduled-task creation commands — adversaries use /create and /ru SYSTEM to achieve elevated persistence.
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1053.005
+detection:
+  selection:
+    EventAction: ProcessCreate
+    ProcessName|endswith: schtasks.exe
+    CommandLine|contains:
+      - /create
+  filter:
+    CommandLine|contains:
+      - /ru system
+  condition: selection and filter

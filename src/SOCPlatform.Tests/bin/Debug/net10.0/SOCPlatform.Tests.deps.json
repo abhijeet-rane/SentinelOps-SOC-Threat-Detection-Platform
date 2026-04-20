@@ -2134,6 +2134,17 @@
           "lib/netstandard1.1/xunit.execution.dotnet.dll": {}
         }
       },
+      "YamlDotNet/16.2.1": {
+        "runtime": {
+          "lib/net8.0/YamlDotNet.dll": {
+            "assemblyVersion": "16.0.0.0",
+            "fileVersion": "16.2.1.0"
+          }
+        },
+        "compile": {
+          "lib/net8.0/YamlDotNet.dll": {}
+        }
+      },
       "SOCPlatform.API/1.0.0": {
         "dependencies": {
           "Asp.Versioning.Mvc": "8.1.0",
@@ -2188,7 +2199,8 @@
       "SOCPlatform.Detection/1.0.0": {
         "dependencies": {
           "SOCPlatform.Core": "1.0.0",
-          "SOCPlatform.Infrastructure": "1.0.0"
+          "SOCPlatform.Infrastructure": "1.0.0",
+          "YamlDotNet": "16.2.1"
         },
         "runtime": {
           "SOCPlatform.Detection.dll": {
@@ -5138,6 +5150,13 @@
       "sha512": "sha512-yMb6vMESlSrE3Wfj7V6cjQ3S4TXdXpRqYeNEI3zsX31uTsGMJjEw6oD5F5u1cHnMptjhEECnmZSsPxB6ChZHDQ==",
       "path": "xunit.extensibility.execution/2.9.3",
       "hashPath": "xunit.extensibility.execution.2.9.3.nupkg.sha512"
+    },
+    "YamlDotNet/16.2.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-im6zTVgesjcfTRfuMpnx51Rg2svWenp/3q5XBfcIzgj8PNIkkSD2xEl9HWcVi2SaJPP9XcXUdzed9gSDEuf1TA==",
+      "path": "yamldotnet/16.2.1",
+      "hashPath": "yamldotnet.16.2.1.nupkg.sha512"
     },
     "SOCPlatform.API/1.0.0": {
       "type": "project",

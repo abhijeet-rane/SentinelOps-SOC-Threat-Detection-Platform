@@ -1,0 +1,16 @@
+title: Suspicious Windows Service Installed
+id: sigma-service-install-001
+description: Detects Windows service installation with a binary path pointing at a suspicious temp / user-writable location (common persistence trick).
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1543.003
+detection:
+  selection:
+    EventAction: ServiceInstall
+    ImagePath|contains:
+      - \\temp\\
+      - \\users\\public\\
+      - \\appdata\\local\\temp\\
+      - \\programdata\\
+  condition: selection

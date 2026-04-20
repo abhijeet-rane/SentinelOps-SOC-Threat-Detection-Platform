@@ -240,3 +240,14 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.A
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\StackExchange.Redis.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\StarkbankEcdsa.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\obj\Debug\net10.0\SOCPlatform.API.sourcelink.json
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Sigma\Definitions\mimikatz_credential_dump.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Sigma\Definitions\powershell_encoded_command.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Sigma\Definitions\psexec_remote_execution.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Sigma\Definitions\schtasks_persistence.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Sigma\Definitions\suspicious_service_installed.yml
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Yara\Definitions\cobalt_strike.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Yara\Definitions\mimikatz.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Yara\Definitions\powershell_obfuscation.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Yara\Definitions\ransomware_notes.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Rules\Yara\Definitions\webshell.yar
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\YamlDotNet.dll

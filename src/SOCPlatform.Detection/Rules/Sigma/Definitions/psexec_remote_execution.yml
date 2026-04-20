@@ -1,0 +1,15 @@
+title: Suspicious PsExec Remote Execution
+id: sigma-psexec-001
+description: Detects PsExec / PSEXESVC service activity indicating remote code execution over SMB, commonly abused for lateral movement.
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.t1021.002
+detection:
+  selection:
+    EventAction: ProcessCreate
+    ProcessName|contains:
+      - psexec.exe
+      - psexesvc.exe
+      - paexec.exe
+  condition: selection

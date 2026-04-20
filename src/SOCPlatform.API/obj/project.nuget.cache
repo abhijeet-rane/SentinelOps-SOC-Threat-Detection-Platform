@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "S/rxKEX3Qv8=",
+  "dgSpecHash": "TP9r1VFTAzE=",
   "success": true,
   "projectFilePath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.API\\SOCPlatform.API.csproj",
   "expectedPackageFiles": [
@@ -106,7 +106,8 @@
     "C:\\Users\\abhij\\.nuget\\packages\\system.composition.typedparts\\9.0.0\\system.composition.typedparts.9.0.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.15.0\\system.identitymodel.tokens.jwt.8.15.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512",
-    "C:\\Users\\abhij\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.1\\system.security.cryptography.pkcs.8.0.1.nupkg.sha512"
+    "C:\\Users\\abhij\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.1\\system.security.cryptography.pkcs.8.0.1.nupkg.sha512",
+    "C:\\Users\\abhij\\.nuget\\packages\\yamldotnet\\16.2.1\\yamldotnet.16.2.1.nupkg.sha512"
   ],
   "logs": []
 }

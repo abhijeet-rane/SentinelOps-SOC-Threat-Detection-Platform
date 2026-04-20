@@ -9,7 +9,8 @@
       "SOCPlatform.Detection/1.0.0": {
         "dependencies": {
           "SOCPlatform.Core": "1.0.0",
-          "SOCPlatform.Infrastructure": "1.0.0"
+          "SOCPlatform.Infrastructure": "1.0.0",
+          "YamlDotNet": "16.2.1"
         },
         "runtime": {
           "SOCPlatform.Detection.dll": {}
@@ -669,6 +670,14 @@
           }
         }
       },
+      "YamlDotNet/16.2.1": {
+        "runtime": {
+          "lib/net8.0/YamlDotNet.dll": {
+            "assemblyVersion": "16.0.0.0",
+            "fileVersion": "16.2.1.0"
+          }
+        }
+      },
       "SOCPlatform.Core/1.0.0": {
         "runtime": {
           "SOCPlatform.Core.dll": {
@@ -1054,6 +1063,13 @@
       "sha512": "sha512-CoCRHFym33aUSf/NtWSVSZa99dkd0Hm7OCZUxORBjRB16LNhIEOf8THPqzIYlvKM0nNDAPTRBa1FxEECrgaxxA==",
       "path": "system.security.cryptography.pkcs/8.0.1",
       "hashPath": "system.security.cryptography.pkcs.8.0.1.nupkg.sha512"
+    },
+    "YamlDotNet/16.2.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-im6zTVgesjcfTRfuMpnx51Rg2svWenp/3q5XBfcIzgj8PNIkkSD2xEl9HWcVi2SaJPP9XcXUdzed9gSDEuf1TA==",
+      "path": "yamldotnet/16.2.1",
+      "hashPath": "yamldotnet.16.2.1.nupkg.sha512"
     },
     "SOCPlatform.Core/1.0.0": {
       "type": "project",
