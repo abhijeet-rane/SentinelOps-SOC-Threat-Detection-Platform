@@ -135,38 +135,40 @@ public class YaraEngineTests
     [Fact]
     public void LoadRule_Parses_Full_Yar_File()
     {
-        var yar = """
-        rule Test_Rule {
-          meta:
-            description = "Sample"
-            severity = "high"
-            mitre = "T1059"
-          strings:
-            $a = "findme" nocase
-            $b = "alsofindme"
-          condition:
-            any of them
-        }
-        """;
-        var tmp = Path.GetTempFileName() + ".yar";
-        File.WriteAllText(tmp, yar);
+        // Use a dedicated subdirectory — NOT the system /tmp root.
+        // On Linux CI runners /tmp contains restricted systemd-private-* folders
+        // that would cause Directory.EnumerateFiles(..., AllDirectories) to throw
+        // UnauthorizedAccessException.
+        var dir = Path.Combine(Path.GetTempPath(), $"yara-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
         try
         {
-            var dir = Path.GetDirectoryName(tmp)!;
-            var renamed = Path.Combine(dir, $"test-{Guid.NewGuid():N}.yar");
-            File.Move(tmp, renamed);
-            try
-            {
-                var loader = new YaraRuleLoader(Microsoft.Extensions.Logging.Abstractions.NullLogger<YaraRuleLoader>.Instance);
-                var rules = loader.LoadFromDirectory(dir);
-                var test = rules.FirstOrDefault(r => r.Name == "Test_Rule");
-                test.Should().NotBeNull();
-                test!.Meta["severity"].Should().Be("high");
-                test.Mitre.Should().Be("T1059");
-                test.Matches("findME here").Should().BeTrue();
+            var yar = """
+            rule Test_Rule {
+              meta:
+                description = "Sample"
+                severity = "high"
+                mitre = "T1059"
+              strings:
+                $a = "findme" nocase
+                $b = "alsofindme"
+              condition:
+                any of them
             }
-            finally { if (File.Exists(renamed)) File.Delete(renamed); }
+            """;
+            File.WriteAllText(Path.Combine(dir, "test.yar"), yar);
+
+            var loader = new YaraRuleLoader(Microsoft.Extensions.Logging.Abstractions.NullLogger<YaraRuleLoader>.Instance);
+            var rules = loader.LoadFromDirectory(dir);
+            var test = rules.FirstOrDefault(r => r.Name == "Test_Rule");
+            test.Should().NotBeNull();
+            test!.Meta["severity"].Should().Be("high");
+            test.Mitre.Should().Be("T1059");
+            test.Matches("findME here").Should().BeTrue();
         }
-        finally { if (File.Exists(tmp)) File.Delete(tmp); }
+        finally
+        {
+            if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+        }
     }
 }
