@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SOCPlatform.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65dd3c0e12a2f931b2637d674df67c2df3baebbe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d7e89364cecfe6aa584fa63b96e5cd556b49583")]
 [assembly: System.Reflection.AssemblyProductAttribute("SOCPlatform.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SOCPlatform.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

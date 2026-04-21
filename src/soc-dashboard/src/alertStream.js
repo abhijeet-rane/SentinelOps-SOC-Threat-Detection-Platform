@@ -6,7 +6,8 @@
 import { HubConnectionBuilder, LogLevel, HttpTransportType } from '@microsoft/signalr';
 import { getToken } from './api';
 
-const HUB_URL = 'http://localhost:5101/hubs/alerts';
+// Dev: unset → localhost:5101. Prod: VITE_HUB_URL=/hubs/alerts (same origin, Caddy proxies it).
+const HUB_URL = import.meta.env.VITE_HUB_URL || 'http://localhost:5101/hubs/alerts';
 
 // Server event names — kept in lock-step with AlertHub.Events in the .NET side.
 const EVT = {

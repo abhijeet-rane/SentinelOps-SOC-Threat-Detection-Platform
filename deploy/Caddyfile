@@ -1,0 +1,61 @@
+# =============================================================================
+# SentinelOps — Edge Caddy config
+#
+# - Auto-TLS from Let's Encrypt for DOMAIN_NAME (HTTPS on 443, HTTP→HTTPS on 80)
+# - Single public origin: dashboard at /, API at /api/*, SignalR at /hubs/*
+# - Security headers applied site-wide
+# - ACME_EMAIL is used by Let's Encrypt for cert-expiry alerts
+# =============================================================================
+
+{
+    email {$ACME_EMAIL}
+    # Uncomment the next line the FIRST time you bring the stack up so Let's Encrypt
+    # issues a staging cert — avoids burning the 5-cert/week prod rate limit on DNS
+    # misconfigs. Remove it once the cert issues cleanly.
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$DOMAIN_NAME} {
+    encode zstd gzip
+
+    # ─── Security headers ────────────────────────────────────────────────
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        Permissions-Policy        "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
+
+    # ─── Health probe forwarded to the API (no auth needed) ─────────────
+    handle_path /health* {
+        reverse_proxy api:8080
+    }
+
+    # ─── API ─────────────────────────────────────────────────────────────
+    handle /api/* {
+        reverse_proxy api:8080
+    }
+
+    # ─── SignalR hub (WebSocket upgrade) ─────────────────────────────────
+    handle /hubs/* {
+        reverse_proxy api:8080
+    }
+
+    # ─── Swagger (optional — comment out in a hardened deployment) ──────
+    handle /swagger/* {
+        reverse_proxy api:8080
+    }
+
+    # ─── Everything else → dashboard SPA ─────────────────────────────────
+    handle {
+        reverse_proxy dashboard:80
+    }
+
+    log {
+        output stdout
+        format json
+        level  INFO
+    }
+}

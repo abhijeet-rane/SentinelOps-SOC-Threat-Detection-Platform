@@ -1,0 +1,24 @@
+# Copy to terraform.tfvars and fill in your values. terraform.tfvars is
+# git-ignored (see .gitignore). Never commit the real file.
+
+region         = "us-east-1"
+environment    = "prod"
+project_name   = "sentinelops"
+instance_type  = "t3.micro"
+
+# Create this key pair first, e.g.:
+#   aws ec2 create-key-pair --key-name sentinelops-demo --region us-east-1 \
+#       --query 'KeyMaterial' --output text > ~/.ssh/sentinelops-demo.pem
+#   chmod 400 ~/.ssh/sentinelops-demo.pem
+ssh_key_name   = "sentinelops-demo"
+
+# Lock SSH to your current public IP. Refresh this when your IP changes.
+#   curl -s https://checkip.amazonaws.com
+allow_ssh_cidr = "203.0.113.10/32"
+
+# Domain that Caddy will request a Let's Encrypt cert for.
+domain_name    = "sentinelops.example.com"
+
+# Public HTTPS clone URL of your SentinelOps fork.
+repo_url       = "https://github.com/YOUR-USERNAME/SOC_Project.git"
+repo_branch    = "main"

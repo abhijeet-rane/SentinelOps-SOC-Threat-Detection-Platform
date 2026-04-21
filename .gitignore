@@ -37,8 +37,24 @@ desktop.ini
 *~
 
 # Environment / secrets
+.env
 .env.local
+.env.production
 appsettings.Development.json
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+
+# SSH keys (never commit)
+*.pem
+*.ppk
 
 # Python
 __pycache__/

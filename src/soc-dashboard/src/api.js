@@ -1,5 +1,8 @@
 // ── SOC Platform API Client – Connected to Real Backend ──
-const API_BASE = 'http://localhost:5101/api/v1';
+// VITE_API_BASE_URL is baked in at build time (Vite envs are static).
+// Dev: unset → falls back to localhost:5101. Prod: set to "/api/v1" so the
+// browser hits the same origin and Caddy reverse-proxies to the API.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5101/api/v1';
 
 let authToken = localStorage.getItem('soc_token') || null;
 

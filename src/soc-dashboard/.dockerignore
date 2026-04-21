@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.local
+.env.development
+.env.development.local
+.env.production.local
+npm-debug.log*
+yarn-error.log*

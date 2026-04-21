@@ -1,0 +1,222 @@
+# =============================================================================
+# SentinelOps — Production Compose file
+#
+# Brings up: postgres · redis · rabbitmq · api · ml · dashboard · caddy
+# ENTRY POINT:  caddy on :80/:443 (the only ports exposed to the host).
+# Everything else talks over the internal `socnet` bridge.
+#
+# Usage on the EC2 box (done automatically by user_data.sh):
+#   cd /opt/sentinelops/soc_platform
+#   docker compose -f docker-compose.prod.yml --env-file /opt/sentinelops/.env \
+#                  up -d --build
+# =============================================================================
+
+networks:
+  socnet:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  rabbitmq_data_prod:
+  ml_models:
+  caddy_data:
+  caddy_config:
+
+x-restart-policy: &restart
+  restart: unless-stopped
+
+x-resources: &small
+  deploy:
+    resources:
+      limits:
+        memory: 256M
+
+services:
+  # ─── PostgreSQL ─────────────────────────────────────────────────────────
+  postgres:
+    <<: *restart
+    image: postgres:16-alpine
+    container_name: soc-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks: [socnet]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ──────────────────────────────────────────────────────────────
+  redis:
+    <<: [*restart, *small]
+    image: redis:7-alpine
+    container_name: soc-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    volumes:
+      - redis_data_prod:/data
+    networks: [socnet]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── RabbitMQ ───────────────────────────────────────────────────────────
+  rabbitmq:
+    <<: *restart
+    image: rabbitmq:3.13-management-alpine
+    container_name: soc-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data_prod:/var/lib/rabbitmq
+    networks: [socnet]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ─── .NET API ──────────────────────────────────────────────────────────
+  api:
+    <<: *restart
+    build:
+      context: ..                                  # repo root
+      dockerfile: soc_platform/src/SOCPlatform.API/Dockerfile
+    image: sentinelops/api:latest
+    container_name: soc-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      # JWT
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      JWT_ACCESS_TOKEN_EXPIRATION_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES}
+      JWT_REFRESH_TOKEN_EXPIRATION_DAYS: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS}
+
+      # Email
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO}
+
+      # Threat intel
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
+      VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY}
+
+      # ML service (in-network DNS)
+      ML_SERVICE_URL: http://ml:8001
+
+      # CORS: only the public domain may call the API from a browser
+      CORS_ALLOWED_ORIGINS: https://${DOMAIN_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks: [socnet]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+  # ─── Python ML Service ─────────────────────────────────────────────────
+  ml:
+    <<: *restart
+    build:
+      context: ..
+      dockerfile: soc_platform/src/SOCPlatform.ML/Dockerfile
+    image: sentinelops/ml:latest
+    container_name: soc-ml
+    volumes:
+      - ml_models:/app/data/models
+    networks: [socnet]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/api/ml/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── React Dashboard (nginx) ───────────────────────────────────────────
+  dashboard:
+    <<: [*restart, *small]
+    build:
+      context: ..
+      dockerfile: soc_platform/src/soc-dashboard/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_HUB_URL: /hubs/alerts
+    image: sentinelops/dashboard:latest
+    container_name: soc-dashboard
+    networks: [socnet]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ─── Caddy reverse proxy (public :80/:443) ─────────────────────────────
+  caddy:
+    <<: [*restart, *small]
+    image: caddy:2.8-alpine
+    container_name: soc-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"    # HTTP/3
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+    networks: [socnet]
