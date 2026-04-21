@@ -4,8 +4,18 @@ using System.Web;
 namespace SOCPlatform.API.Middleware;
 
 /// <summary>
-/// Middleware that sanitizes incoming request data to prevent XSS and SQL injection.
-/// Runs on all endpoints to provide a defense-in-depth layer.
+/// SECONDARY defense-in-depth layer — NOT a primary input validation control.
+///
+/// Real input safety in this codebase comes from:
+///   • EF Core parameterised queries (no raw SQL concatenation anywhere),
+///   • FluentValidation on every DTO entering a controller,
+///   • Output encoding at the React layer + CSP headers on responses.
+///
+/// This middleware only scans query strings for coarse XSS / SQLi patterns
+/// and returns 400 on a match. Regex blocking is well-known to be bypassable
+/// (e.g. via character-class substitution or encoding tricks) so operators
+/// must NOT rely on it for safety. The value is logging: a legitimate user
+/// never hits these patterns, so every block here is an IOC worth triaging.
 /// </summary>
 public partial class InputSanitizationMiddleware
 {

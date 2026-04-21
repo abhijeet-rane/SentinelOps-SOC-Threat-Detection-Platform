@@ -93,6 +93,8 @@ public static class DependencyInjection
                      ?? new MlServiceOptions();
             client.BaseAddress = new Uri(ml.BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(ml.TimeoutSeconds);
+            if (!string.IsNullOrWhiteSpace(ml.ApiKey))
+                client.DefaultRequestHeaders.Add("X-API-Key", ml.ApiKey);
         }, timeoutSeconds: 30);
 
         services.AddResilientHttpClient(PolicyRegistry.AbuseIpDbClient, client =>
@@ -122,6 +124,8 @@ public static class DependencyInjection
                      ?? new MlServiceOptions();
             client.BaseAddress = new Uri(ml.BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(ml.TimeoutSeconds);
+            if (!string.IsNullOrWhiteSpace(ml.ApiKey))
+                client.DefaultRequestHeaders.Add("X-API-Key", ml.ApiKey);
         });
 
         // ── In-app log processing queue (kept for backward-compat) ────────────

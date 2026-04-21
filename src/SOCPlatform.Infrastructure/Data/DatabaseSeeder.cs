@@ -1,4 +1,6 @@
+using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SOCPlatform.Core.Entities;
 using SOCPlatform.Core.Enums;
@@ -8,16 +10,23 @@ namespace SOCPlatform.Infrastructure.Data;
 /// <summary>
 /// Seeds the database with initial roles, permissions, detection rules,
 /// threat intelligence indicators, response playbooks, and a default admin user.
+/// Seed passwords come from configuration (<c>Seed:AdminPassword</c>, etc.) —
+/// in Development they are read from <c>appsettings.Development.json</c>; when
+/// unset we generate a random password and log it at WARN so the operator
+/// can see it ONCE in the startup log. In Production the seeder is never
+/// invoked automatically (Program.cs only seeds in Development / Testing).
 /// </summary>
 public class DatabaseSeeder
 {
     private readonly SOCDbContext _context;
     private readonly ILogger<DatabaseSeeder> _logger;
+    private readonly IConfiguration _config;
 
-    public DatabaseSeeder(SOCDbContext context, ILogger<DatabaseSeeder> logger)
+    public DatabaseSeeder(SOCDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration config)
     {
         _context = context;
         _logger = logger;
+        _config = config;
     }
 
     public async Task SeedAsync()
@@ -158,52 +167,79 @@ public class DatabaseSeeder
     {
         if (await _context.Users.AnyAsync()) return;
 
-        // Default admin user (password: Admin@Soc2026!)
+        // Read seed passwords from config; fall back to a random 24-char string
+        // that we log so the operator can rescue the account. A logged password
+        // is a nudge to change it on first login, not a secure default.
+        var adminPwd   = ResolvePassword("Seed:AdminPassword",   "admin");
+        var managerPwd = ResolvePassword("Seed:ManagerPassword", "soc.manager");
+        var l2Pwd      = ResolvePassword("Seed:L2Password",      "analyst.l2");
+        var l1Pwd      = ResolvePassword("Seed:L1Password",      "analyst.l1");
+
         var adminUser = new User
         {
             Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
             Username = "admin",
             Email = "admin@socplatform.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@Soc2026!", workFactor: 12),
-            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000004"), // System Admin
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPwd, workFactor: 12),
+            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000004"),
             IsActive = true
         };
 
-        // Default SOC Manager
         var managerUser = new User
         {
             Id = Guid.Parse("20000000-0000-0000-0000-000000000002"),
             Username = "soc.manager",
             Email = "manager@socplatform.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Manager@Soc2026!", workFactor: 12),
-            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000003"), // SOC Manager
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(managerPwd, workFactor: 12),
+            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000003"),
             IsActive = true
         };
 
-        // Default L2 Analyst
         var l2Analyst = new User
         {
             Id = Guid.Parse("20000000-0000-0000-0000-000000000003"),
             Username = "analyst.l2",
             Email = "analyst.l2@socplatform.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Analyst@Soc2026!", workFactor: 12),
-            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000002"), // SOC L2
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(l2Pwd, workFactor: 12),
+            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000002"),
             IsActive = true
         };
 
-        // Default L1 Analyst
         var l1Analyst = new User
         {
             Id = Guid.Parse("20000000-0000-0000-0000-000000000004"),
             Username = "analyst.l1",
             Email = "analyst.l1@socplatform.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Analyst@Soc2026!", workFactor: 12),
-            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000001"), // SOC L1
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(l1Pwd, workFactor: 12),
+            RoleId = Guid.Parse("10000000-0000-0000-0000-000000000001"),
             IsActive = true
         };
 
         await _context.Users.AddRangeAsync(adminUser, managerUser, l2Analyst, l1Analyst);
         _logger.LogInformation("Seeded 4 default users (admin, manager, analyst.l2, analyst.l1)");
+    }
+
+    /// <summary>
+    /// Returns the configured seed password for a user, or — if none is set —
+    /// generates a random one and logs it at WARN level exactly once.
+    /// </summary>
+    private string ResolvePassword(string configKey, string username)
+    {
+        var configured = _config[configKey];
+        if (!string.IsNullOrWhiteSpace(configured))
+            return configured;
+
+        // Random URL-safe password. Base64URL avoids shell-escaping headaches.
+        var bytes = RandomNumberGenerator.GetBytes(18);
+        var pwd = Convert.ToBase64String(bytes)
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+        _logger.LogWarning(
+            "No seed password set for '{User}' (config key '{Key}'). Generated a random one: {Password} " +
+            "— change it immediately after first login.",
+            username, configKey, pwd);
+
+        return pwd;
     }
 
     // ──────────────────────────────────────────────────

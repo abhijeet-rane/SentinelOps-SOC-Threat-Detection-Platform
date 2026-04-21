@@ -308,15 +308,24 @@ builder.Services.AddProblemDetails();
 var rabbitOpts = builder.Configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>() ?? new RabbitMqOptions();
 var mlOpts     = builder.Configuration.GetSection(MlServiceOptions.SectionName).Get<MlServiceOptions>() ?? new MlServiceOptions();
 
-builder.Services.AddHealthChecks()
-    // Liveness: just proves the process is up (no deps).
-    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+// Only register dependency-backed health checks when the upstream config is
+// populated. This keeps startup robust in Testing (WebApplicationFactory
+// injects test config after CreateBuilder) and dev without the full stack up.
+// In Production, ValidateRequiredSecrets has already rejected empty values
+// for the DB / Redis / Rabbit / ML keys below, so they're guaranteed here.
+var hcBuilder = builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
-    // Readiness deps:
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!,
-               name: "postgres", tags: ["ready", "db"])
-    .AddRedis(redisOpts.ConnectionString, name: "redis", tags: ["ready", "cache"])
-    .AddRabbitMQ(
+var pgConn = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrWhiteSpace(pgConn))
+    hcBuilder.AddNpgSql(pgConn, name: "postgres", tags: ["ready", "db"]);
+
+if (!string.IsNullOrWhiteSpace(redisOpts.Host))
+    hcBuilder.AddRedis(redisOpts.ConnectionString, name: "redis", tags: ["ready", "cache"]);
+
+if (!string.IsNullOrWhiteSpace(rabbitOpts.Host))
+{
+    hcBuilder.AddRabbitMQ(
         sp => new RabbitMQ.Client.ConnectionFactory
         {
             HostName = rabbitOpts.Host,
@@ -325,9 +334,16 @@ builder.Services.AddHealthChecks()
             Password = rabbitOpts.Password,
             VirtualHost = rabbitOpts.VirtualHost
         }.CreateConnectionAsync(),
-        name: "rabbitmq", tags: ["ready", "queue"])
-    .AddUrlGroup(new Uri($"{mlOpts.BaseUrl.TrimEnd('/')}/api/ml/status"),
-                 name: "ml-service", tags: ["ready", "external"])
+        name: "rabbitmq", tags: ["ready", "queue"]);
+}
+
+if (!string.IsNullOrWhiteSpace(mlOpts.BaseUrl) && Uri.TryCreate(mlOpts.BaseUrl, UriKind.Absolute, out var mlBaseUri))
+{
+    hcBuilder.AddUrlGroup(new Uri(mlBaseUri, "/api/ml/status"),
+                          name: "ml-service", tags: ["ready", "external"]);
+}
+
+hcBuilder
     .AddCheck<AbuseIpDbHealthCheck>("abuseipdb", tags: ["ready", "external"])
     .AddCheck<VirusTotalHealthCheck>("virustotal", tags: ["ready", "external"])
     .AddCheck<SmtpHealthCheck>("smtp", tags: ["ready", "external"]);
@@ -342,6 +358,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<AuditSaveChangesInterceptor>();
 
 var app = builder.Build();
+
+// ────────────────────────────────────────────────────────────────────────────
+// Fail-fast secret validation (Production + Staging only).
+// Development and Testing tolerate missing values so local + CI runs work.
+// ────────────────────────────────────────────────────────────────────────────
+ValidateRequiredSecrets(app);
 
 // ════════════════════════════════════════════════════════════════════════════
 //                              PIPELINE (order matters)
@@ -398,10 +420,16 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<AlertHub>("/hubs/alerts");
 
-// Prometheus scrape endpoint. Secured by network boundary in prod;
-// dev is fine as-is because nothing sensitive is exposed.
+// Prometheus scrape endpoint. Token-gated by MetricsAuthMiddleware in
+// Production/Staging — Prometheus must send `Authorization: Bearer <token>`
+// where <token> matches Security:MetricsScrapeToken. Dev is open for
+// developer convenience; Testing is disabled entirely.
 if (!app.Environment.IsEnvironment("Testing"))
 {
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/metrics", StringComparison.OrdinalIgnoreCase),
+        branch => branch.UseMiddleware<MetricsAuthMiddleware>());
+
     app.MapPrometheusScrapingEndpoint("/metrics");
 }
 
@@ -535,7 +563,15 @@ static void ApplyEnvOverrides(IConfigurationBuilder builder)
         ["RABBITMQ_PORT"]         = "RabbitMq:Port",
         ["RABBITMQ_USER"]         = "RabbitMq:UserName",
         ["RABBITMQ_PASSWORD"]     = "RabbitMq:Password",
-        ["ML_SERVICE_URL"]        = "MlService:BaseUrl",
+        ["ML_SERVICE_URL"]             = "MlService:BaseUrl",
+        ["ML_SERVICE_API_KEY"]         = "MlService:ApiKey",
+        ["METRICS_SCRAPE_TOKEN"]       = "Security:MetricsScrapeToken",
+        ["REQUIRE_HMAC_INGESTION"]     = "Security:RequireHmacIngestion",
+        ["ALLOW_INSECURE_AGENT_TLS"]   = "Security:AllowInsecureAgentTls",
+        ["SEED_ADMIN_PASSWORD"]        = "Seed:AdminPassword",
+        ["SEED_MANAGER_PASSWORD"]      = "Seed:ManagerPassword",
+        ["SEED_L2_PASSWORD"]           = "Seed:L2Password",
+        ["SEED_L1_PASSWORD"]           = "Seed:L1Password",
     };
 
     var overrides = new Dictionary<string, string?>();
@@ -547,6 +583,61 @@ static void ApplyEnvOverrides(IConfigurationBuilder builder)
     }
     if (overrides.Count > 0)
         builder.AddInMemoryCollection(overrides);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Fail-fast in Production if a required secret is blank / still a placeholder.
+// Every key here is something the app needs to function at all — a blank means
+// "operator forgot to set the env var" and we'd rather crash than boot in a
+// known-broken state.
+// ────────────────────────────────────────────────────────────────────────────
+static void ValidateRequiredSecrets(WebApplication app)
+{
+    if (!app.Environment.IsProduction() && !app.Environment.IsStaging()) return;
+
+    var cfg = app.Configuration;
+    var missing = new List<string>();
+
+    void Require(string key, Func<string?, bool>? extraCheck = null)
+    {
+        var v = cfg[key];
+        if (string.IsNullOrWhiteSpace(v) || (extraCheck is not null && extraCheck(v)))
+            missing.Add(key);
+    }
+
+    // Database + cache + queue
+    Require("ConnectionStrings:DefaultConnection");
+    Require("ConnectionStrings:Hangfire");
+    Require("Redis:Host");
+    Require("Redis:Password");
+    Require("RabbitMq:Host");
+    Require("RabbitMq:UserName");
+    Require("RabbitMq:Password");
+
+    // JWT — reject the literal placeholder shipped in appsettings.json,
+    // and anything shorter than 32 chars (≈ 256 bits for HS256).
+    Require("JwtSettings:SecretKey", v =>
+        (v ?? "").Contains("CHANGE-THIS-IN-PRODUCTION", StringComparison.OrdinalIgnoreCase) ||
+        (v ?? "").Contains("dev-only-key", StringComparison.OrdinalIgnoreCase) ||
+        (v ?? "").Length < 32);
+
+    // ML service key — required for service-to-service auth.
+    Require("MlService:BaseUrl");
+    Require("MlService:ApiKey");
+
+    // /metrics token — required so Prometheus is not world-scrapable.
+    Require("Security:MetricsScrapeToken");
+
+    if (missing.Count == 0) return;
+
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogCritical(
+        "Startup aborted: {Count} required configuration value(s) are unset or still a placeholder in {Env}: {Keys}. " +
+        "Populate them via environment variables or appsettings secrets and retry.",
+        missing.Count, app.Environment.EnvironmentName, string.Join(", ", missing));
+
+    throw new InvalidOperationException(
+        $"Refusing to start {app.Environment.EnvironmentName} with missing secrets: {string.Join(", ", missing)}");
 }
 
 // Allow WebApplicationFactory<Program> in test project

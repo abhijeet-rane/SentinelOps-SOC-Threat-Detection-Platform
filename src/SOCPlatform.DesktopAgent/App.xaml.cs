@@ -25,8 +25,15 @@ public partial class App : Application
         // Load agent configuration
         var config = LoadConfig();
 
-        // Initialize services
-        _apiClient = new ApiClientService(config.ApiBaseUrl, config.ApiKey);
+        // Initialize services. TLS validation defaults to strict — set
+        // AllowInvalidCerts=true in agent_config.json only for local dev
+        // against self-signed certs, or supply a PinnedThumbprintSha256 for
+        // production when you cannot use a public-PKI cert on the API.
+        _apiClient = new ApiClientService(
+            config.ApiBaseUrl,
+            config.ApiKey,
+            pinnedThumbprintSha256: config.PinnedThumbprintSha256,
+            allowInvalidCerts: config.AllowInvalidCerts);
         _offlineBuffer = new OfflineBufferService();
         _collectionService = new CollectionService(
             _apiClient,
@@ -117,6 +124,18 @@ public class AgentConfig
     public string ApiKey { get; set; } = "test-api-key-for-soc-platform-2026";
     public Guid EndpointId { get; set; } = Guid.NewGuid();
     public int CollectionIntervalSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// SHA-256 thumbprint (hex) of the expected API server certificate.
+    /// When set, the agent pins to this cert instead of trusting the PKI chain.
+    /// </summary>
+    public string? PinnedThumbprintSha256 { get; set; }
+
+    /// <summary>
+    /// Dev-only: skip TLS validation entirely. DO NOT set this in any
+    /// deployment where the agent connects over an untrusted network.
+    /// </summary>
+    public bool AllowInvalidCerts { get; set; }
 
     public static AgentConfig Default => new();
 }

@@ -134,11 +134,18 @@ services:
       ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
       VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY}
 
-      # ML service (in-network DNS)
+      # ML service (in-network DNS). ML_SERVICE_API_KEY is the shared
+      # secret between the API container and the Python ML container.
       ML_SERVICE_URL: http://ml:8001
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY}
 
       # CORS: only the public domain may call the API from a browser
       CORS_ALLOWED_ORIGINS: https://${DOMAIN_NAME}
+
+      # Security controls enforced by Program.cs startup validation
+      # + HmacRequestSigningMiddleware + MetricsAuthMiddleware
+      REQUIRE_HMAC_INGESTION: "true"
+      METRICS_SCRAPE_TOKEN: ${METRICS_SCRAPE_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -166,6 +173,13 @@ services:
       dockerfile: soc_platform/src/SOCPlatform.ML/Dockerfile
     image: sentinelops/ml:latest
     container_name: soc-ml
+    environment:
+      # Same shared secret the API container sends as X-API-Key.
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY}
+      ML_REQUIRE_AUTH: "true"
+      # Empty list = no browser origins. Service-to-service only via Docker
+      # network DNS (api → http://ml:8001).
+      ML_CORS_ORIGINS: ""
     volumes:
       - ml_models:/app/data/models
     networks: [socnet]

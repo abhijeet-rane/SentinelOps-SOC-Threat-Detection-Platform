@@ -43,10 +43,10 @@
         reverse_proxy api:8080
     }
 
-    # ─── Swagger (optional — comment out in a hardened deployment) ──────
-    handle /swagger/* {
-        reverse_proxy api:8080
-    }
+    # Swagger/Scalar/OpenAPI are intentionally NOT routed in production.
+    # The API's Program.cs only maps them in Development, and exposing an
+    # API reference on a public origin is a needless attack-surface.
+    # Re-enable with explicit intent by adding a `handle /swagger/*` block.
 
     # ─── Everything else → dashboard SPA ─────────────────────────────────
     handle {

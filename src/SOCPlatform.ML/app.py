@@ -9,14 +9,19 @@ Production-grade anomaly detection service with three ML models:
 Runs on FastAPI, integrates with the .NET backend via REST.
 """
 
-from fastapi import FastAPI, HTTPException
+import hmac
+import logging
+import os
+import sys
+from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Optional
+
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional
-from contextlib import asynccontextmanager
-import logging
-import sys
-from datetime import datetime
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from models import LoginAnomalyDetector, UEBADetector, NetworkOutlierDetector
 
@@ -71,11 +76,65 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ──────────────────────────────────────────────────
+#  Security configuration (env-driven)
+# ──────────────────────────────────────────────────
+# ML_SERVICE_API_KEY:   required in production; the .NET API sends it as X-API-Key.
+# ML_REQUIRE_AUTH:      "false" disables the check (dev only).
+# ML_CORS_ORIGINS:      comma-separated list. Empty → no browser origins allowed
+#                       (this service is intended for service-to-service calls).
+# ML_PUBLIC_PATHS:      comma-separated paths that skip the API-key check
+#                       (always includes /api/ml/status for healthchecks).
+EXPECTED_API_KEY = os.environ.get("ML_SERVICE_API_KEY", "").strip()
+REQUIRE_AUTH     = os.environ.get("ML_REQUIRE_AUTH", "true").strip().lower() != "false"
+CORS_ORIGINS     = [o.strip() for o in os.environ.get("ML_CORS_ORIGINS", "").split(",") if o.strip()]
+PUBLIC_PATHS     = {p.strip() for p in os.environ.get("ML_PUBLIC_PATHS", "/api/ml/status").split(",") if p.strip()}
+
+if REQUIRE_AUTH and not EXPECTED_API_KEY:
+    # Fail loud so an operator can't silently deploy an open ML service.
+    logger.critical(
+        "ML_SERVICE_API_KEY is unset but ML_REQUIRE_AUTH=true. "
+        "Refusing to start: set ML_SERVICE_API_KEY or disable auth explicitly."
+    )
+    raise SystemExit(1)
+
+
+class ApiKeyMiddleware(BaseHTTPMiddleware):
+    """Checks X-API-Key on every request that is not in PUBLIC_PATHS."""
+
+    async def dispatch(self, request: Request, call_next):
+        if not REQUIRE_AUTH:
+            return await call_next(request)
+
+        # CORS pre-flight
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        if request.url.path in PUBLIC_PATHS:
+            return await call_next(request)
+
+        submitted = request.headers.get("X-API-Key", "")
+        # hmac.compare_digest is constant-time.
+        if not submitted or not hmac.compare_digest(submitted, EXPECTED_API_KEY):
+            logger.warning("Rejected %s %s from %s: missing/invalid X-API-Key",
+                           request.method, request.url.path,
+                           request.client.host if request.client else "?")
+            return JSONResponse(status_code=401,
+                                content={"detail": "Invalid or missing X-API-Key"})
+
+        return await call_next(request)
+
+
+app.add_middleware(ApiKeyMiddleware)
+
+# CORS: strict allow-list. Empty list means "no browser may call this service",
+# which is the safe default because this service is meant for .NET→Python calls.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
 

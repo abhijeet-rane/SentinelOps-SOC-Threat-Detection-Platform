@@ -1,6 +1,8 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Net.Security;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using SOCPlatform.Core.DTOs;
@@ -10,7 +12,16 @@ namespace SOCPlatform.DesktopAgent.Services;
 /// <summary>
 /// HTTP client for communicating with the SOC Platform API.
 /// Supports API key authentication and HMAC-SHA256 request signing.
-/// Includes TLS certificate pinning for production deployments.
+///
+/// TLS validation:
+///   • Default (production) — the platform CA chain is validated by .NET's
+///     default <see cref="HttpClientHandler"/>. Any chain / expiry / hostname
+///     error rejects the request.
+///   • Pinned thumbprint (optional) — if a hex SHA-256 thumbprint is supplied
+///     we pin strictly to that certificate, ignoring the PKI chain.
+///   • Insecure (dev only) — if <c>allowInvalidCerts=true</c> we skip
+///     validation entirely. This is strictly a local-dev affordance; a
+///     WARN is logged on every construction so it can't hide.
 /// </summary>
 public class ApiClientService : IDisposable
 {
@@ -20,21 +31,37 @@ public class ApiClientService : IDisposable
 
     public bool IsConnected { get; private set; }
 
-    public ApiClientService(string baseUrl, string apiKey)
+    public ApiClientService(
+        string baseUrl,
+        string apiKey,
+        string? pinnedThumbprintSha256 = null,
+        bool allowInvalidCerts = false)
     {
         _baseUrl = baseUrl.TrimEnd('/');
         _apiKey = apiKey;
 
-        var handler = new HttpClientHandler
+        var handler = new HttpClientHandler();
+
+        if (allowInvalidCerts)
         {
-            // TLS certificate pinning (enable in production with real certs)
-            ServerCertificateCustomValidationCallback = (_, cert, _, errors) =>
-            {
-                // In production, pin to your specific certificate thumbprint:
-                // return cert?.GetCertHashString() == "YOUR_CERT_THUMBPRINT";
-                return true; // Allow all during development
-            }
-        };
+            // Dev-only escape hatch. Fail loud so this is never a silent default.
+            System.Diagnostics.Trace.TraceWarning(
+                "[ApiClientService] TLS validation is DISABLED (allowInvalidCerts=true). " +
+                "This is only safe for local development against self-signed certs.");
+            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
+        }
+        else if (!string.IsNullOrWhiteSpace(pinnedThumbprintSha256))
+        {
+            var expected = pinnedThumbprintSha256.Replace(":", "").Replace(" ", "");
+            handler.ServerCertificateCustomValidationCallback =
+                (_, cert, _, errors) => cert is not null && CertificateThumbprintMatches(cert, expected);
+        }
+        else
+        {
+            // Default: strict PKI validation. Any policy error → reject.
+            handler.ServerCertificateCustomValidationCallback =
+                (_, _, _, errors) => errors == SslPolicyErrors.None;
+        }
 
         _httpClient = new HttpClient(handler)
         {
@@ -106,6 +133,12 @@ public class ApiClientService : IDisposable
             IsConnected = false;
             return false;
         }
+    }
+
+    private static bool CertificateThumbprintMatches(X509Certificate2 cert, string expectedHex)
+    {
+        var actual = Convert.ToHexString(SHA256.HashData(cert.RawData));
+        return string.Equals(actual, expectedHex, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ComputeHmac(string key, string data)
