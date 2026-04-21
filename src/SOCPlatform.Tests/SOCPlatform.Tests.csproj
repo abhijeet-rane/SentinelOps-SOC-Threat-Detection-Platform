@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SOCPlatform.API\SOCPlatform.API.csproj" />
+    <ProjectReference Include="..\SOCPlatform.AttackSim\SOCPlatform.AttackSim.csproj" />
     <ProjectReference Include="..\SOCPlatform.Core\SOCPlatform.Core.csproj" />
     <ProjectReference Include="..\SOCPlatform.Detection\SOCPlatform.Detection.csproj" />
     <ProjectReference Include="..\SOCPlatform.Infrastructure\SOCPlatform.Infrastructure.csproj" />

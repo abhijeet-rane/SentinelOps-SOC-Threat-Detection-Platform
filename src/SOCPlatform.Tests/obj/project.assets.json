@@ -2875,6 +2875,60 @@
           "lib/netstandard2.1/StarkbankEcdsa.dll": {}
         }
       },
+      "System.CommandLine/2.0.0-beta4.22272.1": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.CommandLine.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.CommandLine.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "resource": {
+          "lib/net6.0/cs/System.CommandLine.resources.dll": {
+            "locale": "cs"
+          },
+          "lib/net6.0/de/System.CommandLine.resources.dll": {
+            "locale": "de"
+          },
+          "lib/net6.0/es/System.CommandLine.resources.dll": {
+            "locale": "es"
+          },
+          "lib/net6.0/fr/System.CommandLine.resources.dll": {
+            "locale": "fr"
+          },
+          "lib/net6.0/it/System.CommandLine.resources.dll": {
+            "locale": "it"
+          },
+          "lib/net6.0/ja/System.CommandLine.resources.dll": {
+            "locale": "ja"
+          },
+          "lib/net6.0/ko/System.CommandLine.resources.dll": {
+            "locale": "ko"
+          },
+          "lib/net6.0/pl/System.CommandLine.resources.dll": {
+            "locale": "pl"
+          },
+          "lib/net6.0/pt-BR/System.CommandLine.resources.dll": {
+            "locale": "pt-BR"
+          },
+          "lib/net6.0/ru/System.CommandLine.resources.dll": {
+            "locale": "ru"
+          },
+          "lib/net6.0/tr/System.CommandLine.resources.dll": {
+            "locale": "tr"
+          },
+          "lib/net6.0/zh-Hans/System.CommandLine.resources.dll": {
+            "locale": "zh-Hans"
+          },
+          "lib/net6.0/zh-Hant/System.CommandLine.resources.dll": {
+            "locale": "zh-Hant"
+          }
+        }
+      },
       "System.Configuration.ConfigurationManager/6.0.0": {
         "type": "package",
         "dependencies": {
@@ -3191,6 +3245,20 @@
           "lib/net8.0/YamlDotNet.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "sentinelattack/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "SOCPlatform.Core": "1.0.0",
+          "System.CommandLine": "2.0.0-beta4.22272.1"
+        },
+        "compile": {
+          "bin/placeholder/sentinelattack.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/sentinelattack.dll": {}
         }
       },
       "SOCPlatform.API/1.0.0": {
@@ -6996,6 +7064,50 @@
         "starkbank-ecdsa.nuspec"
       ]
     },
+    "System.CommandLine/2.0.0-beta4.22272.1": {
+      "sha512": "1uqED/q2H0kKoLJ4+hI2iPSBSEdTuhfCYADeJrAqERmiGQ2NNacYKRNEQ+gFbU4glgVyK8rxI+ZOe1onEtr/Pg==",
+      "type": "package",
+      "path": "system.commandline/2.0.0-beta4.22272.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "lib/net6.0/System.CommandLine.dll",
+        "lib/net6.0/System.CommandLine.pdb",
+        "lib/net6.0/System.CommandLine.xml",
+        "lib/net6.0/cs/System.CommandLine.resources.dll",
+        "lib/net6.0/de/System.CommandLine.resources.dll",
+        "lib/net6.0/es/System.CommandLine.resources.dll",
+        "lib/net6.0/fr/System.CommandLine.resources.dll",
+        "lib/net6.0/it/System.CommandLine.resources.dll",
+        "lib/net6.0/ja/System.CommandLine.resources.dll",
+        "lib/net6.0/ko/System.CommandLine.resources.dll",
+        "lib/net6.0/pl/System.CommandLine.resources.dll",
+        "lib/net6.0/pt-BR/System.CommandLine.resources.dll",
+        "lib/net6.0/ru/System.CommandLine.resources.dll",
+        "lib/net6.0/tr/System.CommandLine.resources.dll",
+        "lib/net6.0/zh-Hans/System.CommandLine.resources.dll",
+        "lib/net6.0/zh-Hant/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/System.CommandLine.dll",
+        "lib/netstandard2.0/System.CommandLine.pdb",
+        "lib/netstandard2.0/System.CommandLine.xml",
+        "lib/netstandard2.0/cs/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/de/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/es/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/fr/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/it/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/ja/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/ko/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/pl/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/pt-BR/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/ru/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/tr/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/zh-Hans/System.CommandLine.resources.dll",
+        "lib/netstandard2.0/zh-Hant/System.CommandLine.resources.dll",
+        "system.commandline.2.0.0-beta4.22272.1.nupkg.sha512",
+        "system.commandline.nuspec"
+      ]
+    },
     "System.Configuration.ConfigurationManager/6.0.0": {
       "sha512": "7T+m0kDSlIPTHIkPMIu6m6tV6qsMqJpvQWW2jIc2qi7sn40qxFo0q+7mEQAhMPXZHMKnWrnv47ntGlM/ejvw3g==",
       "type": "package",
@@ -7473,6 +7585,11 @@
         "yamldotnet.nuspec"
       ]
     },
+    "sentinelattack/1.0.0": {
+      "type": "project",
+      "path": "../SOCPlatform.AttackSim/SOCPlatform.AttackSim.csproj",
+      "msbuildProject": "../SOCPlatform.AttackSim/SOCPlatform.AttackSim.csproj"
+    },
     "SOCPlatform.API/1.0.0": {
       "type": "project",
       "path": "../SOCPlatform.API/SOCPlatform.API.csproj",
@@ -7507,6 +7624,7 @@
       "SOCPlatform.Core >= 1.0.0",
       "SOCPlatform.Detection >= 1.0.0",
       "SOCPlatform.Infrastructure >= 1.0.0",
+      "sentinelattack >= 1.0.0",
       "xunit >= 2.9.3",
       "xunit.runner.visualstudio >= 2.8.2"
     ]
@@ -7545,6 +7663,9 @@
           "projectReferences": {
             "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.API\\SOCPlatform.API.csproj": {
               "projectPath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.API\\SOCPlatform.API.csproj"
+            },
+            "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.AttackSim\\SOCPlatform.AttackSim.csproj": {
+              "projectPath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.AttackSim\\SOCPlatform.AttackSim.csproj"
             },
             "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Core\\SOCPlatform.Core.csproj": {
               "projectPath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.Core\\SOCPlatform.Core.csproj"
