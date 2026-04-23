@@ -45,6 +45,25 @@ export const api = {
   resetPassword: (token, newPassword) =>
     request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
 
+  // ── MFA (TOTP, RFC 6238) ──
+  // The login flow:
+  //   1. api.login(u, p) → if res.data.mfaRequired, hold the mfaToken.
+  //   2. api.mfaVerify(mfaToken, code)  OR  api.mfaBackup(mfaToken, backupCode)
+  //      → returns a normal login response with accessToken+refreshToken.
+  mfaSetup:    ()                 => request('/auth/mfa/setup',   { method: 'POST' }),
+  mfaEnable:   (code)             => request('/auth/mfa/enable',  { method: 'POST', body: JSON.stringify({ code }) }),
+  mfaDisable:  (currentPassword, code) =>
+                                     request('/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ currentPassword, code }) }),
+  mfaStatus:   ()                 => request('/auth/mfa/status'),
+  mfaVerify:   (mfaToken, code)   => request('/auth/mfa/verify',  { method: 'POST', body: JSON.stringify({ mfaToken, code }) }),
+  mfaBackup:   (mfaToken, backupCode) =>
+                                     request('/auth/mfa/backup',  { method: 'POST', body: JSON.stringify({ mfaToken, backupCode }) }),
+
+  // First-time enrollment during login (for privileged roles that haven't
+  // enrolled yet). Uses the mfaToken in place of an access token.
+  mfaEnrollSetup:    (mfaToken)        => request('/auth/mfa/enroll-setup',    { method: 'POST', body: JSON.stringify({ mfaToken }) }),
+  mfaEnrollComplete: (mfaToken, code)  => request('/auth/mfa/enroll-complete', { method: 'POST', body: JSON.stringify({ mfaToken, code }) }),
+
   // ── Alerts ──
   getAlerts: (params = {}) => {
     const qs = new URLSearchParams(params).toString();

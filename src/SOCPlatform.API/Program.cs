@@ -236,6 +236,20 @@ builder.Services.AddRateLimiter(o =>
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 50
             }));
+
+    // MFA code verify: a stolen password must not be able to brute-force
+    // 6-digit codes. 10 attempts / 10 min / IP is plenty for an honest user
+    // who fat-fingered a code or two, and crushes any online brute force.
+    o.AddPolicy("mfa-verify", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(10),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+            }));
 });
 
 // ────────────────────────────────────────────────────────────────────────────

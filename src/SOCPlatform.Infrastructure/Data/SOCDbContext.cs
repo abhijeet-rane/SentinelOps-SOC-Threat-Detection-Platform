@@ -45,6 +45,26 @@ public class SOCDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
             entity.Property(e => e.PasswordHash).HasMaxLength(500).IsRequired();
 
+            // ── MFA columns ──
+            // MfaSecret: AES-encrypted TOTP secret (Data Protection ciphertext),
+            //            stored as raw bytes. Null = no secret yet.
+            entity.Property(e => e.MfaSecret).HasColumnType("bytea");
+
+            // MfaBackupCodes: JSONB array of BCrypt-hashed single-use recovery codes.
+            // EF needs a value-converter + comparer because List<string> is a mutable
+            // reference type. We use System.Text.Json for serialisation.
+            entity.Property(e => e.MfaBackupCodes)
+                  .HasColumnType("jsonb")
+                  .HasConversion(
+                      v => System.Text.Json.JsonSerializer.Serialize(v ?? new List<string>(), (System.Text.Json.JsonSerializerOptions?)null),
+                      v => string.IsNullOrWhiteSpace(v)
+                            ? new List<string>()
+                            : System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>(),
+                      new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                          (a, b) => (a ?? new()).SequenceEqual(b ?? new()),
+                          v => v.Aggregate(0, (h, s) => HashCode.Combine(h, s.GetHashCode())),
+                          v => v.ToList()));
+
             entity.HasOne(e => e.Role)
                   .WithMany(r => r.Users)
                   .HasForeignKey(e => e.RoleId)

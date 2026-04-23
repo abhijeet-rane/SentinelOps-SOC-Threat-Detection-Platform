@@ -20,6 +20,20 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    // ── Multi-Factor Authentication (TOTP, RFC 6238) ──
+    //
+    // MfaSecret stores the 160-bit TOTP shared secret AES-encrypted via
+    // ASP.NET Core Data Protection. MfaBackupCodes is a JSONB array of
+    // BCrypt-hashed one-time recovery codes. A user can have a pending
+    // secret (MfaSecret set but MfaEnabled = false) between /mfa/setup
+    // and /mfa/enable — once the first code is verified, MfaEnabled is
+    // flipped and MfaEnabledAt is recorded.
+    public byte[]? MfaSecret { get; set; }
+    public bool MfaEnabled { get; set; } = false;
+    public DateTime? MfaEnabledAt { get; set; }
+    public List<string> MfaBackupCodes { get; set; } = new();
+    public int MfaFailedAttempts { get; set; } = 0;
+
     // Navigation
     public Role Role { get; set; } = null!;
     public ICollection<Alert> AssignedAlerts { get; set; } = new List<Alert>();

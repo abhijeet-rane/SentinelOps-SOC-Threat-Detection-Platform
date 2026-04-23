@@ -954,6 +954,22 @@ namespace SOCPlatform.Infrastructure.Migrations
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("MfaBackupCodes")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("MfaEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("MfaEnabledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MfaFailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<byte[]>("MfaSecret")
+                        .HasColumnType("bytea");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)

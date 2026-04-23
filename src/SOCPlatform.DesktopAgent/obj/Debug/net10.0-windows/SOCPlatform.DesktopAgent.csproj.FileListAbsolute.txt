@@ -78,3 +78,4 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.D
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.DesktopAgent\bin\Debug\net10.0-windows\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.DesktopAgent\bin\Debug\net10.0-windows\runtimes\win-x86\native\e_sqlite3.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.DesktopAgent\bin\Debug\net10.0-windows\runtimes\win\lib\net10.0\System.Management.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.DesktopAgent\obj\Debug\net10.0-windows\SOCPlatform.DesktopAgent.sourcelink.json

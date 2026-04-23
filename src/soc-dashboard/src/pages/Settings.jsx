@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings as SettingsIcon, Shield, Users, Plus, X, Edit3, Trash2, Power, Loader, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Users, Plus, X, Edit3, Trash2, Power, Loader, Save, KeyRound } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../components/ToastContext';
+import MfaSection from '../components/MfaSection';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -71,7 +72,8 @@ export default function Settings() {
     useEffect(() => {
         const timer = setTimeout(() => {
             if (tab === 'rules') fetchRules();
-            else fetchUsers();
+            else if (tab === 'users') fetchUsers();
+            else setLoading(false);           // "security" tab has no list to load
         }, 0);
         return () => clearTimeout(timer);
     }, [tab]);
@@ -90,6 +92,7 @@ export default function Settings() {
                 {[
                     { key: 'rules', label: 'Detection Rules', icon: Shield },
                     { key: 'users', label: 'User Management', icon: Users },
+                    { key: 'security', label: 'Security (MFA)', icon: KeyRound },
                 ].map(({ key, label, icon: Icon }) => (
                     <button key={key}
                         onClick={() => setTab(key)}
@@ -111,6 +114,10 @@ export default function Settings() {
                 <div className="flex items-center justify-center" style={{ padding: 60 }}>
                     <Loader className="spin" size={28} style={{ color: 'var(--cyan-400)' }} />
                 </div>
+            ) : tab === 'security' ? (
+                <motion.div variants={item}>
+                    <MfaSection />
+                </motion.div>
             ) : tab === 'rules' ? (
                 // ── Detection Rules Tab ──
                 <motion.div variants={item} className="card">

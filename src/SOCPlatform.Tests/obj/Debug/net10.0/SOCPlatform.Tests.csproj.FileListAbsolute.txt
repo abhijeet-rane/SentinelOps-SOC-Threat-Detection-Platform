@@ -606,3 +606,6 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.T
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\zh-Hant\System.CommandLine.resources.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\sentinelattack.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\sentinelattack.pdb
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\appsettings.Testing.json
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\Otp.NET.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.Tests\bin\Debug\net10.0\QRCoder.dll

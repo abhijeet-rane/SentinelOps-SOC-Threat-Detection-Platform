@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "iRnxTxL7jIY=",
+  "dgSpecHash": "F1go+KkuxFk=",
   "success": true,
   "projectFilePath": "C:\\Users\\abhij\\Desktop\\Study\\Projects\\SOC_Project\\soc_platform\\src\\SOCPlatform.API\\SOCPlatform.API.csproj",
   "expectedPackageFiles": [
@@ -83,10 +83,12 @@
     "C:\\Users\\abhij\\.nuget\\packages\\opentelemetry.instrumentation.aspnetcore\\1.10.1\\opentelemetry.instrumentation.aspnetcore.1.10.1.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\opentelemetry.instrumentation.http\\1.10.0\\opentelemetry.instrumentation.http.1.10.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\opentelemetry.instrumentation.runtime\\1.10.0\\opentelemetry.instrumentation.runtime.1.10.0.nupkg.sha512",
+    "C:\\Users\\abhij\\.nuget\\packages\\otp.net\\1.4.0\\otp.net.1.4.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.8\\pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\polly\\8.5.0\\polly.8.5.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\polly.core\\8.5.0\\polly.core.8.5.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\polly.extensions.http\\3.0.0\\polly.extensions.http.3.0.0.nupkg.sha512",
+    "C:\\Users\\abhij\\.nuget\\packages\\qrcoder\\1.6.0\\qrcoder.1.6.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\questpdf\\2026.2.0\\questpdf.2026.2.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\rabbitmq.client\\7.0.0\\rabbitmq.client.7.0.0.nupkg.sha512",
     "C:\\Users\\abhij\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",

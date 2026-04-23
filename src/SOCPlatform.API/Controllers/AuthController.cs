@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SOCPlatform.Core.DTOs;
 using SOCPlatform.Core.Interfaces;
 
@@ -13,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IPasswordResetService _passwordReset;
+    private readonly IMfaService _mfa;
 
-    public AuthController(IAuthService authService, IPasswordResetService passwordReset)
+    public AuthController(IAuthService authService, IPasswordResetService passwordReset, IMfaService mfa)
     {
         _authService = authService;
         _passwordReset = passwordReset;
+        _mfa = mfa;
     }
 
     /// <summary>
@@ -145,6 +148,177 @@ public class AuthController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _authService.LogoutAsync(userId);
         return Ok(ApiResponse<object>.Ok(new { }, "Logged out successfully"));
+    }
+
+    // ─── MFA (TOTP, RFC 6238) ───────────────────────────────────────────
+
+    /// <summary>
+    /// Second step after /login when the response carried MfaRequired=true.
+    /// Exchange the short-lived mfaToken + 6-digit TOTP code for full tokens.
+    /// </summary>
+    [HttpPost("mfa/verify")]
+    [AllowAnonymous]
+    [EnableRateLimiting("mfa-verify")]
+    public async Task<IActionResult> MfaVerify([FromBody] MfaVerifyRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.CompleteMfaAsync(request);
+            return Ok(ApiResponse<LoginResponseDto>.Ok(result, "MFA verified"));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Same as /mfa/verify but consumes a single-use backup code instead of a TOTP.
+    /// </summary>
+    [HttpPost("mfa/backup")]
+    [AllowAnonymous]
+    [EnableRateLimiting("mfa-verify")]
+    public async Task<IActionResult> MfaBackup([FromBody] MfaBackupRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.CompleteMfaBackupAsync(request);
+            return Ok(ApiResponse<LoginResponseDto>.Ok(result, "Backup code accepted"));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Generate a pending TOTP secret. Must be followed by /mfa/enable with
+    /// a valid code to actually turn MFA on.
+    /// </summary>
+    [HttpPost("mfa/setup")]
+    [Authorize]
+    public async Task<IActionResult> MfaSetup(CancellationToken ct)
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var setup = await _mfa.GenerateSetupAsync(userId, ct);
+            return Ok(ApiResponse<MfaSetupResponseDto>.Ok(setup));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Confirm the pending TOTP secret with a code, flip MfaEnabled=true, and
+    /// return the 10 single-use backup codes (shown to the user ONCE).
+    /// </summary>
+    [HttpPost("mfa/enable")]
+    [Authorize]
+    public async Task<IActionResult> MfaEnable([FromBody] MfaEnableRequestDto request, CancellationToken ct)
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _mfa.EnableAsync(userId, request.Code, ct);
+            return Ok(ApiResponse<MfaEnableResponseDto>.Ok(result,
+                "MFA enabled. Save the backup codes — they won't be shown again."));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Disable MFA. Requires both the user's current password AND a valid
+    /// TOTP code so a stolen access token alone cannot kill the second factor.
+    /// </summary>
+    [HttpPost("mfa/disable")]
+    [Authorize]
+    public async Task<IActionResult> MfaDisable([FromBody] MfaDisableRequestDto request, CancellationToken ct)
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _mfa.DisableAsync(userId, request.CurrentPassword, request.Code, ct);
+            return Ok(ApiResponse<object>.Ok(new { }, "MFA disabled"));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>Current MFA state for the authenticated user.</summary>
+    [HttpGet("mfa/status")]
+    [Authorize]
+    public async Task<IActionResult> MfaStatus(CancellationToken ct)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var status = await _mfa.GetStatusAsync(userId, ct);
+        return Ok(ApiResponse<MfaStatusDto>.Ok(status));
+    }
+
+    // ─── First-time enrollment DURING login (bootstrap path) ──────────────
+    // A privileged account (SOC Manager / System Administrator) that has not
+    // yet enrolled MFA cannot reach /mfa/setup — it cannot get a full access
+    // token without MFA. These two endpoints accept the short-lived mfaToken
+    // from /auth/login so the user can self-enroll on their very first login.
+    // Anonymous at the pipeline level because the mfaToken audience is
+    // SOCPlatform.Mfa (not SOCPlatform.Web); AuthService validates it.
+
+    /// <summary>Generate QR + secret using an mfaToken (login-time enrollment).</summary>
+    [HttpPost("mfa/enroll-setup")]
+    [AllowAnonymous]
+    [EnableRateLimiting("mfa-verify")]
+    public async Task<IActionResult> MfaEnrollSetup([FromBody] MfaEnrollSetupRequestDto request)
+    {
+        try
+        {
+            var setup = await _authService.BeginMfaEnrollmentAsync(request);
+            return Ok(ApiResponse<MfaSetupResponseDto>.Ok(setup));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>Confirm TOTP code, enable MFA, return backup codes + full login tokens.</summary>
+    [HttpPost("mfa/enroll-complete")]
+    [AllowAnonymous]
+    [EnableRateLimiting("mfa-verify")]
+    public async Task<IActionResult> MfaEnrollComplete([FromBody] MfaEnrollCompleteRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.CompleteMfaEnrollmentAsync(request);
+            return Ok(ApiResponse<MfaEnrollCompleteResponseDto>.Ok(result,
+                "MFA enrolled. Save the backup codes — they won't be shown again."));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     // ── User Management (Admin) ──

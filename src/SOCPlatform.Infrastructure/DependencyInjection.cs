@@ -53,7 +53,14 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<DatabaseSeeder>();
 
+        // ── Data Protection (required by MfaService for secret encryption) ──
+        // Keys are stored by default in %LOCALAPPDATA%/ASP.NET/DataProtection-Keys
+        // on Windows and /home/$USER/.aspnet/DataProtection-Keys on Linux. For
+        // production behind Docker this volume is persisted via docker-compose.
+        services.AddDataProtection();
+
         // ── Application services ──────────────────────────────────────────────
+        services.AddScoped<IMfaService, MfaService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IPasswordResetService, PasswordResetService>();

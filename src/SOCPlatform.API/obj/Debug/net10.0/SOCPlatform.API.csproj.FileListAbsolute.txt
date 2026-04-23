@@ -265,3 +265,6 @@ C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.A
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\OpenTelemetry.Instrumentation.Http.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\OpenTelemetry.Instrumentation.Runtime.dll
 C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Serilog.Enrichers.Span.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\appsettings.Testing.json
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\Otp.NET.dll
+C:\Users\abhij\Desktop\Study\Projects\SOC_Project\soc_platform\src\SOCPlatform.API\bin\Debug\net10.0\QRCoder.dll

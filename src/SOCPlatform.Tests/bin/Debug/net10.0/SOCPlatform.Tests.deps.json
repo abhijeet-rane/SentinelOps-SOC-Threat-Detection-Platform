@@ -71,11 +71,11 @@
           "Microsoft.AspNetCore.Connections.Abstractions": "10.0.0.0",
           "Microsoft.AspNetCore.CookiePolicy": "10.0.0.0",
           "Microsoft.AspNetCore.Cors": "10.0.0.0",
-          "Microsoft.AspNetCore.Cryptography.Internal": "10.0.0.0",
+          "Microsoft.AspNetCore.Cryptography.Internal.Reference": "10.0.0.0",
           "Microsoft.AspNetCore.Cryptography.KeyDerivation": "10.0.0.0",
-          "Microsoft.AspNetCore.DataProtection.Abstractions": "10.0.0.0",
-          "Microsoft.AspNetCore.DataProtection": "10.0.0.0",
-          "Microsoft.AspNetCore.DataProtection.Extensions": "10.0.0.0",
+          "Microsoft.AspNetCore.DataProtection.Abstractions.Reference": "10.0.0.0",
+          "Microsoft.AspNetCore.DataProtection.Reference": "10.0.0.0",
+          "Microsoft.AspNetCore.DataProtection.Extensions.Reference": "10.0.0.0",
           "Microsoft.AspNetCore.Diagnostics.Abstractions": "10.0.0.0",
           "Microsoft.AspNetCore.Diagnostics": "10.0.0.0",
           "Microsoft.AspNetCore.Diagnostics.HealthChecks": "10.0.0.0",
@@ -319,7 +319,7 @@
           "System.Security.Cryptography.OpenSsl": "10.0.0.0",
           "System.Security.Cryptography.Primitives": "10.0.0.0",
           "System.Security.Cryptography.X509Certificates": "10.0.0.0",
-          "System.Security.Cryptography.Xml": "10.0.0.0",
+          "System.Security.Cryptography.Xml.Reference": "10.0.0.0",
           "System.Security": "4.0.0.0",
           "System.Security.Principal": "10.0.0.0",
           "System.Security.Principal.Windows": "10.0.0.0",
@@ -1505,7 +1505,7 @@
       "MimeKit/4.13.0": {
         "dependencies": {
           "BouncyCastle.Cryptography": "2.5.1",
-          "System.Security.Cryptography.Pkcs": "8.0.1"
+          "System.Security.Cryptography.Pkcs": "10.0.3"
         },
         "runtime": {
           "lib/net8.0/MimeKit.dll": {
@@ -1703,6 +1703,17 @@
           "lib/net8.0/OpenTelemetry.Instrumentation.Runtime.dll": {}
         }
       },
+      "Otp.NET/1.4.0": {
+        "runtime": {
+          "lib/net8.0/Otp.NET.dll": {
+            "assemblyVersion": "1.4.0.0",
+            "fileVersion": "1.4.0.0"
+          }
+        },
+        "compile": {
+          "lib/net8.0/Otp.NET.dll": {}
+        }
+      },
       "Pipelines.Sockets.Unofficial/2.2.8": {
         "runtime": {
           "lib/net5.0/Pipelines.Sockets.Unofficial.dll": {
@@ -1751,6 +1762,17 @@
         },
         "compile": {
           "lib/netstandard2.0/Polly.Extensions.Http.dll": {}
+        }
+      },
+      "QRCoder/1.6.0": {
+        "runtime": {
+          "lib/net6.0/QRCoder.dll": {
+            "assemblyVersion": "1.6.0.0",
+            "fileVersion": "1.6.0.0"
+          }
+        },
+        "compile": {
+          "lib/net6.0/QRCoder.dll": {}
         }
       },
       "QuestPDF/2026.2.0": {
@@ -2537,6 +2559,8 @@
           "BCrypt.Net-Next": "4.0.3",
           "ClosedXML": "0.105.0",
           "MailKit": "4.13.0",
+          "Microsoft.AspNetCore.DataProtection": "10.0.3",
+          "Microsoft.AspNetCore.DataProtection.Extensions": "10.0.3",
           "Microsoft.EntityFrameworkCore": "10.0.3",
           "Microsoft.Extensions.Configuration.Binder": "10.0.3",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
@@ -2545,8 +2569,10 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "10.0.3",
           "Microsoft.Extensions.Options.DataAnnotations": "10.0.3",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
+          "Otp.NET": "1.4.0",
           "Polly": "8.5.0",
           "Polly.Extensions.Http": "3.0.0",
+          "QRCoder": "1.6.0",
           "QuestPDF": "2026.2.0",
           "SOCPlatform.Core": "1.0.0",
           "SendGrid": "9.29.3",
@@ -2681,7 +2707,7 @@
         },
         "compileOnly": true
       },
-      "Microsoft.AspNetCore.Cryptography.Internal/10.0.0.0": {
+      "Microsoft.AspNetCore.Cryptography.Internal.Reference/10.0.0.0": {
         "compile": {
           "Microsoft.AspNetCore.Cryptography.Internal.dll": {}
         },
@@ -2693,19 +2719,19 @@
         },
         "compileOnly": true
       },
-      "Microsoft.AspNetCore.DataProtection.Abstractions/10.0.0.0": {
+      "Microsoft.AspNetCore.DataProtection.Abstractions.Reference/10.0.0.0": {
         "compile": {
           "Microsoft.AspNetCore.DataProtection.Abstractions.dll": {}
         },
         "compileOnly": true
       },
-      "Microsoft.AspNetCore.DataProtection/10.0.0.0": {
+      "Microsoft.AspNetCore.DataProtection.Reference/10.0.0.0": {
         "compile": {
           "Microsoft.AspNetCore.DataProtection.dll": {}
         },
         "compileOnly": true
       },
-      "Microsoft.AspNetCore.DataProtection.Extensions/10.0.0.0": {
+      "Microsoft.AspNetCore.DataProtection.Extensions.Reference/10.0.0.0": {
         "compile": {
           "Microsoft.AspNetCore.DataProtection.Extensions.dll": {}
         },
@@ -4169,7 +4195,7 @@
         },
         "compileOnly": true
       },
-      "System.Security.Cryptography.Xml/10.0.0.0": {
+      "System.Security.Cryptography.Xml.Reference/10.0.0.0": {
         "compile": {
           "System.Security.Cryptography.Xml.dll": {}
         },
@@ -4412,6 +4438,31 @@
       "WindowsBase/4.0.0.0": {
         "compile": {
           "WindowsBase.dll": {}
+        },
+        "compileOnly": true
+      },
+      "Microsoft.AspNetCore.Cryptography.Internal/10.0.3": {
+        "compileOnly": true
+      },
+      "Microsoft.AspNetCore.DataProtection/10.0.3": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Cryptography.Internal": "10.0.3",
+          "Microsoft.AspNetCore.DataProtection.Abstractions": "10.0.3",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Options": "10.0.3",
+          "System.Security.Cryptography.Xml": "10.0.3"
+        },
+        "compileOnly": true
+      },
+      "Microsoft.AspNetCore.DataProtection.Abstractions/10.0.3": {
+        "compileOnly": true
+      },
+      "Microsoft.AspNetCore.DataProtection.Extensions/10.0.3": {
+        "dependencies": {
+          "Microsoft.AspNetCore.DataProtection": "10.0.3",
+          "Microsoft.Extensions.DependencyInjection": "10.0.3"
         },
         "compileOnly": true
       },
@@ -4738,9 +4789,15 @@
       "System.Diagnostics.EventLog/10.0.0": {
         "compileOnly": true
       },
-      "System.Security.Cryptography.Pkcs/8.0.1": {
+      "System.Security.Cryptography.Pkcs/10.0.3": {
         "compile": {
-          "lib/net8.0/System.Security.Cryptography.Pkcs.dll": {}
+          "lib/net10.0/System.Security.Cryptography.Pkcs.dll": {}
+        },
+        "compileOnly": true
+      },
+      "System.Security.Cryptography.Xml/10.0.3": {
+        "dependencies": {
+          "System.Security.Cryptography.Pkcs": "10.0.3"
         },
         "compileOnly": true
       },
@@ -5314,6 +5371,13 @@
       "path": "opentelemetry.instrumentation.runtime/1.10.0",
       "hashPath": "opentelemetry.instrumentation.runtime.1.10.0.nupkg.sha512"
     },
+    "Otp.NET/1.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Fk1NKc0lWmlo6LAFYpFJInRgFKt72knRNEvxndDYoQHFwYOPXav+WEUBvQA0k4lxq5xt0SymrZ+oi0F/G40bPQ==",
+      "path": "otp.net/1.4.0",
+      "hashPath": "otp.net.1.4.0.nupkg.sha512"
+    },
     "Pipelines.Sockets.Unofficial/2.2.8": {
       "type": "package",
       "serviceable": true,
@@ -5341,6 +5405,13 @@
       "sha512": "sha512-drrG+hB3pYFY7w1c3BD+lSGYvH2oIclH8GRSehgfyP5kjnFnHKQuuBhuHLv+PWyFuaTDyk/vfRpnxOzd11+J8g==",
       "path": "polly.extensions.http/3.0.0",
       "hashPath": "polly.extensions.http.3.0.0.nupkg.sha512"
+    },
+    "QRCoder/1.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XmPA81eo+oRxBuyVdswsSkTGTE1d3thfF11Z1PdD7oB56A6HU4G4AAOdySmGRMb/cljwlFTMWUtosGEnwpS6GA==",
+      "path": "qrcoder/1.6.0",
+      "hashPath": "qrcoder.1.6.0.nupkg.sha512"
     },
     "QuestPDF/2026.2.0": {
       "type": "package",
@@ -5735,7 +5806,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.AspNetCore.Cryptography.Internal/10.0.0.0": {
+    "Microsoft.AspNetCore.Cryptography.Internal.Reference/10.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -5745,17 +5816,17 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.AspNetCore.DataProtection.Abstractions/10.0.0.0": {
+    "Microsoft.AspNetCore.DataProtection.Abstractions.Reference/10.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.AspNetCore.DataProtection/10.0.0.0": {
+    "Microsoft.AspNetCore.DataProtection.Reference/10.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.AspNetCore.DataProtection.Extensions/10.0.0.0": {
+    "Microsoft.AspNetCore.DataProtection.Extensions.Reference/10.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -6975,7 +7046,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.Security.Cryptography.Xml/10.0.0.0": {
+    "System.Security.Cryptography.Xml.Reference/10.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -7179,6 +7250,34 @@
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
+    },
+    "Microsoft.AspNetCore.Cryptography.Internal/10.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-STkCfgCECt2cAekgBpXxFDefH5wd4ytYZKihIZSmQqY92BP8N9qN71qFyRpry8Sl/qT5A+bpwe8v7sjDtg5LEA==",
+      "path": "microsoft.aspnetcore.cryptography.internal/10.0.3",
+      "hashPath": "microsoft.aspnetcore.cryptography.internal.10.0.3.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.DataProtection/10.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SEvTckIQ3HDxG4kI+FZzn0nUt9i513SbVSXkhzFPuU6zVCs5ICzqIa523aBmhYCtYNQqMF5FWbyd+83Od9TkuQ==",
+      "path": "microsoft.aspnetcore.dataprotection/10.0.3",
+      "hashPath": "microsoft.aspnetcore.dataprotection.10.0.3.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.DataProtection.Abstractions/10.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-K/JZ35RlRp37zUrsr0pAEnPDYQmPEKVCCRX593WtOJC4udSeJHJ4xilbh1LbX7bYYsH1sjXsj4PhSryjY2VURg==",
+      "path": "microsoft.aspnetcore.dataprotection.abstractions/10.0.3",
+      "hashPath": "microsoft.aspnetcore.dataprotection.abstractions.10.0.3.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.DataProtection.Extensions/10.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WjuinL4MO6Qe4/pbxxr5LhI4bj6KJViDnggB0tFcWWU945pjDXZIe+Ux3hbO3Qp35Z/w5gyYA9i5w0WGS5L1Zg==",
+      "path": "microsoft.aspnetcore.dataprotection.extensions/10.0.3",
+      "hashPath": "microsoft.aspnetcore.dataprotection.extensions.10.0.3.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Http/2.2.2": {
       "type": "package",
@@ -7481,12 +7580,19 @@
       "path": "system.diagnostics.eventlog/10.0.0",
       "hashPath": "system.diagnostics.eventlog.10.0.0.nupkg.sha512"
     },
-    "System.Security.Cryptography.Pkcs/8.0.1": {
+    "System.Security.Cryptography.Pkcs/10.0.3": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-CoCRHFym33aUSf/NtWSVSZa99dkd0Hm7OCZUxORBjRB16LNhIEOf8THPqzIYlvKM0nNDAPTRBa1FxEECrgaxxA==",
-      "path": "system.security.cryptography.pkcs/8.0.1",
-      "hashPath": "system.security.cryptography.pkcs.8.0.1.nupkg.sha512"
+      "sha512": "sha512-Vwbm2siKxaGl515m/5C32J4VCG6VmytrH2ACV6hcWtfj4XQ1zN0cjuuDs49QoDi6/QS3pl2/wPyDYgODO9KxYA==",
+      "path": "system.security.cryptography.pkcs/10.0.3",
+      "hashPath": "system.security.cryptography.pkcs.10.0.3.nupkg.sha512"
+    },
+    "System.Security.Cryptography.Xml/10.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Egnmhk/Im38UtSidZtqg0IOB6xQEpn56WR0j+od4qHQ7BUfo6JvqLBQsUSCHMEZ0kc7TIVGSH7aiAOick25Sfg==",
+      "path": "system.security.cryptography.xml/10.0.3",
+      "hashPath": "system.security.cryptography.xml.10.0.3.nupkg.sha512"
     },
     "System.Threading.RateLimiting/8.0.0": {
       "type": "package",

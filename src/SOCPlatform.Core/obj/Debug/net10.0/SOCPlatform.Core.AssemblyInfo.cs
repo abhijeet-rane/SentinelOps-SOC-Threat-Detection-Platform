@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SOCPlatform.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d7e89364cecfe6aa584fa63b96e5cd556b49583")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f12653fd9d0dd126263b55255487868f475bae16")]
 [assembly: System.Reflection.AssemblyProductAttribute("SOCPlatform.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SOCPlatform.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
