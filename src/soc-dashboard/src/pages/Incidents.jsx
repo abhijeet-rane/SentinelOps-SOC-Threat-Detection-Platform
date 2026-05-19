@@ -125,7 +125,7 @@ export default function Incidents() {
         try {
             const res = await api.getIncidents({ pageSize: 20 });
             if (res?.success && res?.data) {
-                const items = Array.isArray(res.data) ? res.data : (res.data.items || []);
+                const items = Array.isArray(res.data) ? res.data : (res.data.items || res.data.Items || []);
                 setIncidents(items);
             }
         } catch (err) {

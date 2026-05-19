@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Clock, User, MapPin, ExternalLink, AlertTriangle } from 'lucide-react';
+import { X, Shield, Clock, User, MapPin, ExternalLink, AlertTriangle, ChevronUp, Save } from 'lucide-react';
+import { api } from '../api';
+import { useToast } from './ToastContext';
 
 const SEV_COLOR = {
     Critical: 'var(--red-400)',
@@ -8,8 +11,51 @@ const SEV_COLOR = {
     Low: 'var(--green-400)',
 };
 
-export default function AlertDetailModal({ alert, onClose }) {
+export default function AlertDetailModal({ alert, onClose, onUpdate }) {
+    const [status, setStatus] = useState(alert?.status || 'New');
+    const [updating, setUpdating] = useState(false);
+    const toast = useToast();
+
     if (!alert) return null;
+
+    const handleUpdateStatus = async () => {
+        if (status === alert.status) {
+            toast.info('Status unchanged');
+            return;
+        }
+
+        setUpdating(true);
+        try {
+            const res = await api.updateAlertStatus(alert.id, status);
+            if (res.success) {
+                toast.success(`Alert status updated to ${status}`);
+                if (onUpdate) onUpdate();
+                onClose();
+            } else {
+                toast.error(res.message || 'Failed to update status');
+            }
+        } catch (err) {
+            toast.error('Failed to update alert status');
+        }
+        setUpdating(false);
+    };
+
+    const handleEscalate = async () => {
+        setUpdating(true);
+        try {
+            const res = await api.escalateAlert(alert.id);
+            if (res.success) {
+                toast.success('Alert escalated successfully');
+                if (onUpdate) onUpdate();
+                onClose();
+            } else {
+                toast.error(res.message || 'Failed to escalate alert');
+            }
+        } catch (err) {
+            toast.error('Failed to escalate alert');
+        }
+        setUpdating(false);
+    };
 
     const fields = [
         { label: 'Severity', value: alert.severity, icon: AlertTriangle, color: SEV_COLOR[alert.severity] || 'var(--text-muted)' },
@@ -83,6 +129,55 @@ export default function AlertDetailModal({ alert, onClose }) {
                                 {new Date(alert.slaDeadline) < new Date() && <span style={{ fontWeight: 700, marginLeft: 6, color: 'var(--red-400)' }}>BREACHED</span>}
                             </div>
                         )}
+
+                        {/* Action Buttons */}
+                        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-default)', display: 'flex', gap: 10 }}>
+                            {/* Status Dropdown */}
+                            <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Update Status
+                                </label>
+                                <select 
+                                    className="form-select" 
+                                    value={status} 
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    disabled={updating}
+                                    style={{ width: '100%' }}
+                                >
+                                    <option value="New">New</option>
+                                    <option value="InProgress">In Progress</option>
+                                    <option value="Escalated">Escalated</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                                <button 
+                                    className="btn btn-primary btn-sm" 
+                                    onClick={handleUpdateStatus}
+                                    disabled={updating || status === alert.status}
+                                    title="Update Status"
+                                >
+                                    <Save size={14} />
+                                    {updating ? 'Updating...' : 'Update'}
+                                </button>
+                                
+                                {alert.status !== 'Escalated' && alert.status !== 'Resolved' && alert.status !== 'Closed' && (
+                                    <button 
+                                        className="btn btn-ghost btn-sm" 
+                                        onClick={handleEscalate}
+                                        disabled={updating}
+                                        title="Escalate Alert"
+                                        style={{ color: 'var(--amber-400)' }}
+                                    >
+                                        <ChevronUp size={14} />
+                                        Escalate
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </motion.div>
             </motion.div>

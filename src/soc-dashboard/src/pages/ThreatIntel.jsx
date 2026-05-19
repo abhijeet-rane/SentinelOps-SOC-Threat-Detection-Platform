@@ -149,8 +149,8 @@ export default function ThreatIntel() {
             api.getThreatIntelStats(),
         ]);
         if (indRes?.data) {
-            setIndicators(indRes.data.items || []);
-            setTotal(indRes.data.total || 0);
+            setIndicators(indRes.data.items || indRes.data.Items || []);
+            setTotal(indRes.data.total || indRes.data.TotalCount || 0);
         }
         if (statsRes?.data) setStats(statsRes.data);
         setLoading(false);

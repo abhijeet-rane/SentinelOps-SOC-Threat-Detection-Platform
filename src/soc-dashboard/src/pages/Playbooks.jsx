@@ -169,17 +169,17 @@ export default function Playbooks() {
 
                             {/* Execution Stats */}
                             <div className="flex gap-md" style={{ fontSize: '0.78rem' }}>
-                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem' }}>{pb.totalExecutions ?? pb.total ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Total</span></div>
-                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--green-400)' }}>{pb.completedExecutions ?? pb.completed ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Success</span></div>
-                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--red-400)' }}>{pb.failedExecutions ?? pb.failed ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Failed</span></div>
-                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--amber-400)' }}>{pb.pendingExecutions ?? pb.pending ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Pending</span></div>
+                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem' }}>{pb.stats?.totalExecutions ?? pb.totalExecutions ?? pb.total ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Total</span></div>
+                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--green-400)' }}>{pb.stats?.completed ?? pb.completedExecutions ?? pb.completed ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Success</span></div>
+                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--red-400)' }}>{pb.stats?.failed ?? pb.failedExecutions ?? pb.failed ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Failed</span></div>
+                                <div><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--amber-400)' }}>{pb.stats?.pending ?? pb.pendingExecutions ?? pb.pending ?? 0}</span><br /><span style={{ color: 'var(--text-muted)' }}>Pending</span></div>
                             </div>
 
                             {/* Success Rate Bar */}
                             <div style={{ marginTop: 14 }}>
                                 {(() => {
-                                    const total = pb.totalExecutions ?? pb.total ?? 0;
-                                    const completed = pb.completedExecutions ?? pb.completed ?? 0;
+                                    const total = pb.stats?.totalExecutions ?? pb.totalExecutions ?? pb.total ?? 0;
+                                    const completed = pb.stats?.completed ?? pb.completedExecutions ?? pb.completed ?? 0;
                                     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
                                     return (
                                         <>

@@ -24,9 +24,9 @@ export default function Alerts() {
         try {
             const res = await api.getAlerts(filter);
             if (res?.success && res?.data) {
-                const items = Array.isArray(res.data) ? res.data : (res.data.items || []);
+                const items = Array.isArray(res.data) ? res.data : (res.data.items || res.data.Items || []);
                 setAlerts(items);
-                setTotal(res.data.total || items.length);
+                setTotal(res.data.total || res.data.TotalCount || items.length);
             }
         } catch (err) {
             console.error('Failed to load alerts:', err);
@@ -197,7 +197,7 @@ export default function Alerts() {
                 </motion.div>
             )}
 
-            <AlertDetailModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
+            <AlertDetailModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} onUpdate={load} />
         </motion.div>
     );
 }
