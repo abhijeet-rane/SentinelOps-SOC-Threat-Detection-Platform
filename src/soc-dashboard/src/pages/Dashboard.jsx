@@ -80,17 +80,16 @@ export default function Dashboard() {
                     if (statsRes?.success && statsRes?.data) {
                         const d = statsRes.data;
                         setStats({
-                            total: (d.byStatus?.New || 0) + (d.byStatus?.InProgress || 0) + (d.byStatus?.Escalated || 0) +
-                                (d.byStatus?.Resolved || 0) + (d.byStatus?.Closed || 0),
-                            newAlerts: d.byStatus?.New || 0,
-                            inProgress: d.byStatus?.InProgress || 0,
-                            escalated: d.byStatus?.Escalated || 0,
-                            resolved: d.byStatus?.Resolved || 0,
-                            closed: d.byStatus?.Closed || 0,
-                            critical: d.bySeverity?.Critical || 0,
-                            high: d.bySeverity?.High || 0,
-                            medium: d.bySeverity?.Medium || 0,
-                            low: d.bySeverity?.Low || 0,
+                            total: d.total || 0,
+                            newAlerts: d.byStatus?.new || 0,
+                            inProgress: d.byStatus?.inProgress || 0,
+                            escalated: d.byStatus?.escalated || 0,
+                            resolved: d.byStatus?.resolved || 0,
+                            closed: d.byStatus?.closed || 0,
+                            critical: d.bySeverity?.critical || 0,
+                            high: d.bySeverity?.high || 0,
+                            medium: d.bySeverity?.medium || 0,
+                            low: d.bySeverity?.low || 0,
                             slaBreaches: d.slaBreaches || 0,
                             unassignedCritical: d.unassignedCritical || 0,
                         });

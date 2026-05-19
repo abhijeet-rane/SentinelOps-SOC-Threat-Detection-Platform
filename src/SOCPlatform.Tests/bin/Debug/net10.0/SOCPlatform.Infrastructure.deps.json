@@ -28,7 +28,8 @@
           "QuestPDF": "2026.2.0",
           "SOCPlatform.Core": "1.0.0",
           "SendGrid": "9.29.3",
-          "System.IdentityModel.Tokens.Jwt": "8.15.0"
+          "System.IdentityModel.Tokens.Jwt": "8.15.0",
+          "System.Security.Cryptography.Xml": "10.0.7"
         },
         "runtime": {
           "SOCPlatform.Infrastructure.dll": {}
@@ -130,7 +131,7 @@
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
           "Microsoft.Extensions.Options": "10.0.3",
-          "System.Security.Cryptography.Xml": "10.0.3"
+          "System.Security.Cryptography.Xml": "10.0.7"
         },
         "runtime": {
           "lib/net10.0/Microsoft.AspNetCore.DataProtection.dll": {
@@ -470,7 +471,7 @@
       "MimeKit/4.13.0": {
         "dependencies": {
           "BouncyCastle.Cryptography": "2.5.1",
-          "System.Security.Cryptography.Pkcs": "10.0.3"
+          "System.Security.Cryptography.Pkcs": "10.0.7"
         },
         "runtime": {
           "lib/net8.0/MimeKit.dll": {
@@ -733,11 +734,11 @@
           }
         }
       },
-      "System.Security.Cryptography.Pkcs/10.0.3": {
+      "System.Security.Cryptography.Pkcs/10.0.7": {
         "runtime": {
           "lib/net10.0/System.Security.Cryptography.Pkcs.dll": {
             "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.326.7603"
+            "fileVersion": "10.0.726.21808"
           }
         },
         "runtimeTargets": {
@@ -745,18 +746,18 @@
             "rid": "win",
             "assetType": "runtime",
             "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.326.7603"
+            "fileVersion": "10.0.726.21808"
           }
         }
       },
-      "System.Security.Cryptography.Xml/10.0.3": {
+      "System.Security.Cryptography.Xml/10.0.7": {
         "dependencies": {
-          "System.Security.Cryptography.Pkcs": "10.0.3"
+          "System.Security.Cryptography.Pkcs": "10.0.7"
         },
         "runtime": {
           "lib/net10.0/System.Security.Cryptography.Xml.dll": {
             "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.0.326.7603"
+            "fileVersion": "10.0.726.21808"
           }
         }
       },
@@ -1154,19 +1155,19 @@
       "path": "system.io.packaging/8.0.1",
       "hashPath": "system.io.packaging.8.0.1.nupkg.sha512"
     },
-    "System.Security.Cryptography.Pkcs/10.0.3": {
+    "System.Security.Cryptography.Pkcs/10.0.7": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Vwbm2siKxaGl515m/5C32J4VCG6VmytrH2ACV6hcWtfj4XQ1zN0cjuuDs49QoDi6/QS3pl2/wPyDYgODO9KxYA==",
-      "path": "system.security.cryptography.pkcs/10.0.3",
-      "hashPath": "system.security.cryptography.pkcs.10.0.3.nupkg.sha512"
+      "sha512": "sha512-dbdKfF3eA5l+CXiAbDxiCxdezoxeanbue1ck8m49ih1L9uZG6ry8Ul8On6vpragyMDJJP4rQHUY/SWgk66tCYA==",
+      "path": "system.security.cryptography.pkcs/10.0.7",
+      "hashPath": "system.security.cryptography.pkcs.10.0.7.nupkg.sha512"
     },
-    "System.Security.Cryptography.Xml/10.0.3": {
+    "System.Security.Cryptography.Xml/10.0.7": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Egnmhk/Im38UtSidZtqg0IOB6xQEpn56WR0j+od4qHQ7BUfo6JvqLBQsUSCHMEZ0kc7TIVGSH7aiAOick25Sfg==",
-      "path": "system.security.cryptography.xml/10.0.3",
-      "hashPath": "system.security.cryptography.xml.10.0.3.nupkg.sha512"
+      "sha512": "sha512-wG/+ospsC2oR6j7INYh2V5/CWR6Cpt1Zjkxbo0lfovoi/2RpIcGZPVXOPBNVrI5fmrrji0mdNgez+FClDsIuYA==",
+      "path": "system.security.cryptography.xml/10.0.7",
+      "hashPath": "system.security.cryptography.xml.10.0.7.nupkg.sha512"
     },
     "SOCPlatform.Core/1.0.0": {
       "type": "project",
