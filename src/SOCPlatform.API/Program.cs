@@ -416,11 +416,15 @@ app.Use(async (ctx, next) =>
 app.UseMiddleware<RequestSizeLimitMiddleware>();
 app.UseMiddleware<InputSanitizationMiddleware>();
 
-// 6. Rate limiting
-app.UseRateLimiter();
-
-// 7. CORS (before auth)
+// 6. CORS (MUST run before the rate limiter — when the limiter rejects a
+//    request with 429 the pipeline short-circuits, so if CORS ran after
+//    it the 429 response would go back without Access-Control-Allow-Origin
+//    and the browser would show it as a generic "Failed to fetch" network
+//    error instead of a visible 429).
 app.UseCors("SOCDashboard");
+
+// 7. Rate limiting
+app.UseRateLimiter();
 
 // 8. HMAC + API key (agent ingestion path)
 app.UseMiddleware<HmacRequestSigningMiddleware>();

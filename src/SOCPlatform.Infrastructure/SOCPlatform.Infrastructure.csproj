@@ -13,6 +13,11 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.3" />
 
+    <!-- Pin patched version of System.Security.Cryptography.Xml to close
+         GHSA-37gx-xxp4-5rgx + GHSA-w3x6-4m5h-cxqf (pulled in transitively
+         by DocumentFormat.OpenXml / ClosedXML). .NET 10.0.7 servicing. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
+
     <!-- Data -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />

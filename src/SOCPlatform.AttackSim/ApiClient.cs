@@ -28,7 +28,43 @@ public sealed class ApiClient : IDisposable
 
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
         var data = doc.RootElement.GetProperty("data");
-        _token = data.GetProperty("accessToken").GetString();
+
+        // Check if MFA is required
+        if (data.TryGetProperty("mfaRequired", out var mfaRequired) && mfaRequired.GetBoolean())
+        {
+            // Check if MFA enrollment is required
+            if (data.TryGetProperty("mfaEnrollmentRequired", out var enrollRequired) && enrollRequired.GetBoolean())
+            {
+                throw new InvalidOperationException(
+                    "MFA enrollment required. Please login via the dashboard to enroll MFA first, " +
+                    "or disable MFA for this user in the database.");
+            }
+
+            // MFA is enabled, need to prompt for code
+            var mfaToken = data.GetProperty("mfaToken").GetString();
+            Console.Write("MFA code required. Enter 6-digit code: ");
+            var mfaCode = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrEmpty(mfaCode))
+            {
+                throw new InvalidOperationException("MFA code is required");
+            }
+
+            // Complete MFA challenge
+            var mfaResp = await _http.PostAsJsonAsync("api/v1/auth/mfa/verify", 
+                new { mfaToken, code = mfaCode }, Json, ct);
+            mfaResp.EnsureSuccessStatusCode();
+
+            using var mfaDoc = JsonDocument.Parse(await mfaResp.Content.ReadAsStringAsync(ct));
+            var mfaData = mfaDoc.RootElement.GetProperty("data");
+            _token = mfaData.GetProperty("accessToken").GetString();
+        }
+        else
+        {
+            // No MFA required, get access token directly
+            _token = data.GetProperty("accessToken").GetString();
+        }
+
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
     }
 

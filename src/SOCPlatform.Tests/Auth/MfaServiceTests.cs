@@ -207,7 +207,7 @@ public class MfaServiceTests
         u.MfaSecret.Should().NotBeNull();
         u.MfaSecret!.SequenceEqual(raw).Should().BeFalse("persisted secret must be ciphertext, not plaintext");
         // Round-trips through the protector
-        _protector.Unprotect(u.MfaSecret).Should().Equal(raw);
+        _protector.Unprotect(u.MfaSecret!).Should().Equal(raw);
     }
 
     // Stub audit service so tests don't require the interceptor + chain.

@@ -19,20 +19,56 @@ async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
+  let res;
   try {
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-    // Don't intercept 401 on login/auth endpoints — let the caller handle it
-    if (res.status === 401 && !path.startsWith('/auth/')) {
-      setToken(null);
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
-    }
-    const data = await res.json();
-    return data;
+    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   } catch (err) {
-    if (err.message === 'Unauthorized') throw err;
-    console.error(`API Error [${path}]:`, err);
-    return { success: false, message: err.message || 'Network error' };
+    // Fetch itself failed — the API is unreachable, CORS preflight was denied,
+    // or the network dropped. fetch() throws TypeError "Failed to fetch" here.
+    console.error(`API Error [${path}]: network`, err);
+    return {
+      success: false,
+      message: 'Cannot reach the API server. Check that it is running and try again.',
+    };
+  }
+
+  // Don't intercept 401 on login/auth endpoints — let the caller handle it.
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    setToken(null);
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
+
+  // 429 is special — show it to the user with the Retry-After hint if set.
+  if (res.status === 429) {
+    const retryAfter = parseInt(res.headers.get('Retry-After') || '0', 10);
+    const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
+    return {
+      success: false,
+      errors: ['Too many attempts. Please wait'
+              + (minutes ? ` about ${minutes} minute(s)` : ' a few minutes')
+              + ' and try again.'],
+    };
+  }
+
+  // Empty body (204, or rejects with no content) → synthesize a success/fail.
+  const text = await res.text();
+  if (!text) {
+    return res.ok
+      ? { success: true, data: null }
+      : { success: false, message: `HTTP ${res.status}` };
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Non-JSON response (HTML error page, plain text) — surface it rather than
+    // crashing. Happens on 500 when the global exception handler misses.
+    console.error(`API Error [${path}]: non-JSON response`, text.slice(0, 200));
+    return {
+      success: false,
+      message: `Server returned a non-JSON response (HTTP ${res.status}).`,
+    };
   }
 }
 

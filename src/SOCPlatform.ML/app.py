@@ -15,7 +15,24 @@ import os
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
+
+# Developer convenience: when running locally via `python app.py`, auto-load
+# .env.local the same way the .NET API does, so a fresh dev machine works
+# without remembering to prefix every run with env var exports. In production
+# the container gets its env from docker-compose and this call is a no-op.
+try:
+    from dotenv import load_dotenv  # python-dotenv (in requirements.txt)
+
+    _here = Path(__file__).resolve().parent
+    for candidate in (_here, _here.parent, _here.parent.parent, _here.parent.parent.parent):
+        envfile = candidate / ".env.local"
+        if envfile.exists():
+            load_dotenv(envfile, override=False)
+            break
+except ImportError:
+    pass
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
