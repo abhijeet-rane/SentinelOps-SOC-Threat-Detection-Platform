@@ -25,7 +25,7 @@ public class ApiKeyAuthenticationMiddleware
         var path = context.Request.Path.Value ?? "";
 
         // Only apply to agent ingestion endpoints
-        if (!path.StartsWith("/api/logs/ingest", StringComparison.OrdinalIgnoreCase))
+        if (!path.StartsWith("/api/v1/logs/ingest", StringComparison.OrdinalIgnoreCase))
         {
             await _next(context);
             return;

@@ -37,15 +37,30 @@ public class CollectionService
         _endpointId = endpointId;
         _collectionInterval = collectionInterval ?? TimeSpan.FromSeconds(30);
 
-        _collectors = new List<ILogCollector>
+        _collectors = new List<ILogCollector>();
+
+        // Initialize collectors with error handling
+        TryAddCollector(() => new WindowsEventLogCollector(endpointId));
+        TryAddCollector(() => new AuthenticationCollector(endpointId));
+        TryAddCollector(() => new PrivilegeCollector(endpointId));
+        TryAddCollector(() => new FileAccessCollector(endpointId));
+        TryAddCollector(() => new NetworkCollector(endpointId));
+        TryAddCollector(() => new USBCollector(endpointId));
+
+        StatusChanged?.Invoke($"Initialized {_collectors.Count} collectors");
+    }
+
+    private void TryAddCollector(Func<ILogCollector> factory)
+    {
+        try
         {
-            new WindowsEventLogCollector(endpointId),
-            new AuthenticationCollector(endpointId),
-            new PrivilegeCollector(endpointId),
-            new FileAccessCollector(endpointId),
-            new NetworkCollector(endpointId),
-            new USBCollector(endpointId)
-        };
+            var collector = factory();
+            _collectors.Add(collector);
+        }
+        catch (Exception ex)
+        {
+            StatusChanged?.Invoke($"Failed to initialize collector: {ex.Message}");
+        }
     }
 
     public void Start()

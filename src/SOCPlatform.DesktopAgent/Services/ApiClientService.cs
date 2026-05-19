@@ -84,7 +84,7 @@ public class ApiClientService : IDisposable
 
             // Add HMAC signature headers
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-            var path = "/api/logs/ingest";
+            var path = "/api/v1/logs/ingest";
             var bodyHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
             var signingString = $"{timestamp}POST{path}{bodyHash}";
             var signature = ComputeHmac(_apiKey, signingString);
@@ -124,7 +124,7 @@ public class ApiClientService : IDisposable
     {
         try
         {
-            var response = await _httpClient.GetAsync("/api/logs/health");
+            var response = await _httpClient.GetAsync("/api/v1/logs/health");
             IsConnected = response.IsSuccessStatusCode;
             return IsConnected;
         }

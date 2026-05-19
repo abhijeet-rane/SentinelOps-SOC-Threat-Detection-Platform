@@ -4,7 +4,7 @@
   "editable": true,
   "graphTooltip": 1,
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "timezone": "",
   "refresh": "10s",
   "time": { "from": "now-1h", "to": "now" },
@@ -16,7 +16,7 @@
         "label": "Severity",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "query": "label_values(socp_alerts_total, severity)",
+        "query": "label_values(socp_alerts_alerts_total, severity)",
         "includeAll": true,
         "multi": true,
         "refresh": 2
@@ -27,120 +27,340 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Alerts (last 1h)",
+      "title": "Total Alerts",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
       "targets": [
-        { "expr": "sum(increase(socp_alerts_total[1h]))", "legendFormat": "total" }
+        { 
+          "expr": "sum(socp_alerts_alerts_total)", 
+          "legendFormat": "Total Alerts",
+          "refId": "A"
+        }
       ],
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+      "options": { 
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": { 
+          "calcs": ["lastNotNull"], 
+          "fields": "", 
+          "values": false 
+        } 
+      },
+      "fieldConfig": { 
+        "defaults": { 
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          }
+        } 
+      }
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Critical alerts (last 1h)",
+      "title": "Critical Alerts",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
       "targets": [
-        { "expr": "sum(increase(socp_alerts_total{severity=\"Critical\"}[1h]))", "legendFormat": "critical" }
+        { 
+          "expr": "sum(socp_alerts_alerts_total{severity=\"Critical\"})", 
+          "legendFormat": "Critical",
+          "refId": "A"
+        }
       ],
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } }
+      "options": { 
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": { 
+          "calcs": ["lastNotNull"], 
+          "fields": "", 
+          "values": false 
+        } 
+      },
+      "fieldConfig": { 
+        "defaults": { 
+          "color": { "mode": "fixed", "fixedColor": "red" } 
+        } 
+      }
     },
     {
       "id": 3,
       "type": "stat",
-      "title": "SLA breaches (last 1h)",
+      "title": "SLA Breaches",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
       "targets": [
-        { "expr": "sum(increase(socp_sla_breaches_total[1h]))", "legendFormat": "breaches" }
+        { 
+          "expr": "sum(socp_sla_breaches_alerts_total)", 
+          "legendFormat": "SLA Breaches",
+          "refId": "A"
+        }
       ],
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } } }
+      "options": { 
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": { 
+          "calcs": ["lastNotNull"], 
+          "fields": "", 
+          "values": false 
+        } 
+      },
+      "fieldConfig": { 
+        "defaults": { 
+          "color": { "mode": "fixed", "fixedColor": "orange" } 
+        } 
+      }
     },
     {
       "id": 4,
       "type": "stat",
-      "title": "Logs ingested/min",
+      "title": "Total Logs Ingested",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
       "targets": [
-        { "expr": "sum(rate(socp_ingestion_logs_total[1m]) * 60)", "legendFormat": "logs/min" }
-      ]
+        { 
+          "expr": "sum(socp_ingestion_logs_logs_total)", 
+          "legendFormat": "Total Logs",
+          "refId": "A"
+        }
+      ],
+      "options": { 
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": { 
+          "calcs": ["lastNotNull"], 
+          "fields": "", 
+          "values": false 
+        } 
+      },
+      "fieldConfig": { 
+        "defaults": { 
+          "color": { "mode": "palette-classic" } 
+        } 
+      }
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Alert rate by severity",
+      "title": "Alert Rate by Severity",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "targets": [
         {
-          "expr": "sum by (severity) (rate(socp_alerts_total{severity=~\"$severity\"}[5m]) * 60)",
-          "legendFormat": "{{severity}}"
+          "expr": "sum by (severity) (rate(socp_alerts_alerts_total{severity=~\"$severity\"}[5m]) * 60)",
+          "legendFormat": "{{severity}}",
+          "refId": "A"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "short", 
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 20,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Detection duration (p50 / p95) per rule",
+      "title": "Log Ingestion Rate",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum by (le, rule) (rate(socp_detection_duration_ms_bucket[5m])))", "legendFormat": "p50 {{rule}}" },
-        { "expr": "histogram_quantile(0.95, sum by (le, rule) (rate(socp_detection_duration_ms_bucket[5m])))", "legendFormat": "p95 {{rule}}" }
+        {
+          "expr": "rate(socp_ingestion_logs_logs_total[1m]) * 60",
+          "legendFormat": "Logs/min",
+          "refId": "A"
+        }
       ],
-      "fieldConfig": { "defaults": { "unit": "ms" } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "short", 
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 20,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     },
     {
       "id": 7,
       "type": "timeseries",
-      "title": "SLA breaches by severity",
+      "title": "Detection Duration (Average)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
       "targets": [
-        { "expr": "sum by (severity) (rate(socp_sla_breaches_total[5m]) * 60)", "legendFormat": "{{severity}}" }
+        { 
+          "expr": "rate(socp_detection_duration_ms_milliseconds_sum[5m]) / rate(socp_detection_duration_ms_milliseconds_count[5m])", 
+          "legendFormat": "Avg Duration (ms)",
+          "refId": "A"
+        }
       ],
-      "fieldConfig": { "defaults": { "unit": "short" } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "ms",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     },
     {
       "id": 8,
       "type": "timeseries",
-      "title": "ML inference latency (p50 / p95) per model",
+      "title": "Detection Duration Percentiles (p50 / p95)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum by (le, model) (rate(socp_ml_inference_duration_ms_bucket[5m])))", "legendFormat": "p50 {{model}}" },
-        { "expr": "histogram_quantile(0.95, sum by (le, model) (rate(socp_ml_inference_duration_ms_bucket[5m])))", "legendFormat": "p95 {{model}}" }
+        { 
+          "expr": "histogram_quantile(0.50, sum(rate(socp_detection_duration_ms_milliseconds_bucket[5m])) by (le))", 
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        { 
+          "expr": "histogram_quantile(0.95, sum(rate(socp_detection_duration_ms_milliseconds_bucket[5m])) by (le))", 
+          "legendFormat": "p95",
+          "refId": "B"
+        }
       ],
-      "fieldConfig": { "defaults": { "unit": "ms" } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "ms",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     },
     {
       "id": 9,
       "type": "timeseries",
-      "title": "HTTP requests by status",
+      "title": "SLA Breach Rate by Severity",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
       "targets": [
-        {
-          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count[5m]) * 60)",
-          "legendFormat": "{{http_response_status_code}}"
+        { 
+          "expr": "sum by (severity) (rate(socp_sla_breaches_alerts_total[5m]) * 60)", 
+          "legendFormat": "{{severity}}",
+          "refId": "A"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "short" } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "short",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     },
     {
       "id": 10,
       "type": "timeseries",
-      "title": "Process memory & GC pressure",
+      "title": "HTTP Request Rate by Status Code",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
       "targets": [
-        { "expr": "process_runtime_dotnet_gc_heap_size_bytes / 1024 / 1024", "legendFormat": "heap MB ({{generation}})" }
+        {
+          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count[1m]) * 60)",
+          "legendFormat": "{{http_response_status_code}}",
+          "refId": "A"
+        }
       ],
-      "fieldConfig": { "defaults": { "unit": "decmbytes" } }
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "short",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "stacking": {
+              "mode": "normal"
+            }
+          } 
+        } 
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Process Memory (GC Heap Size)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "targets": [
+        { 
+          "expr": "process_runtime_dotnet_gc_heap_size_bytes / 1024 / 1024", 
+          "legendFormat": "Heap {{generation}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "decmbytes",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          } 
+        } 
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "HTTP Request Duration (p50 / p95 / p99)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "targets": [
+        { 
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le)) * 1000", 
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        { 
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le)) * 1000", 
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        { 
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le)) * 1000", 
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { 
+        "defaults": { 
+          "unit": "ms",
+          "custom": { 
+            "drawStyle": "line", 
+            "lineInterpolation": "smooth", 
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          } 
+        } 
+      }
     }
   ]
 }

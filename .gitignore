@@ -1,48 +1,86 @@
-# .NET build output
+# ============================================
+# .NET Build Output
+# ============================================
 bin/
 obj/
 out/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
 
-# .NET user/IDE files
+# ============================================
+# .NET User/IDE Files
+# ============================================
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 .vs/
+.vscode/
+*.code-workspace
 
-# NuGet
+# ============================================
+# NuGet Packages
+# ============================================
 *.nupkg
+*.snupkg
 **/packages/
 project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# ============================================
 # Node / Frontend
+# ============================================
 node_modules/
 dist/
+build/
 *.tsbuildinfo
+.cache/
+.parcel-cache/
+coverage/
 
-# pnpm
+# Package managers
 .pnpm-store/
+.yarn/
+.npm/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# OS files
+# ============================================
+# OS Files
+# ============================================
 Thumbs.db
 .DS_Store
 desktop.ini
-
-# IDE
-.idea/
 *.swp
 *.swo
 *~
 
-# Environment / secrets
+# ============================================
+# IDE
+# ============================================
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# ============================================
+# Environment / Secrets (CRITICAL)
+# ============================================
 .env
 .env.local
+.env.development
 .env.production
+.env.*.local
 appsettings.Development.json
+appsettings.Production.json
 
+# ============================================
 # Terraform
+# ============================================
 .terraform/
 .terraform.lock.hcl
 *.tfstate
@@ -52,22 +90,90 @@ appsettings.Development.json
 crash.log
 crash.*.log
 
-# SSH keys (never commit)
+# ============================================
+# SSH Keys (NEVER COMMIT)
+# ============================================
 *.pem
 *.ppk
+*.key
+id_rsa*
+id_ed25519*
 
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
 .venv/
 venv/
+env/
+ENV/
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
-# Logs & temp
+# ML Models (large files)
+*.joblib
+*.pkl
+*.h5
+*.pb
+
+# ============================================
+# Docker
+# ============================================
+.dockerignore
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Logs & Temp Files
+# ============================================
 *.log
 *.tmp
+*.temp
 lint_results.txt
 lint_report.json
 lint_full.txt
 last_lint.txt
+
+# ============================================
+# Documentation Build Output
+# ============================================
+docs/_build/
+site/
+
+# ============================================
+# Test Results
+# ============================================
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.backup
+*~
+
+# ============================================
+# Project-Specific
+# ============================================
+# Keep example files
+!.env.example
+!appsettings.json
+!terraform.tfvars.example
+
+# Ignore specific large or generated files
+insert_key.sql

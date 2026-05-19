@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SOCPlatform.DesktopAgent")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f12653fd9d0dd126263b55255487868f475bae16")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e15dc7b380512bbaf1ff5a095f346bec3682540")]
 [assembly: System.Reflection.AssemblyProductAttribute("SOCPlatform.DesktopAgent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SOCPlatform.DesktopAgent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

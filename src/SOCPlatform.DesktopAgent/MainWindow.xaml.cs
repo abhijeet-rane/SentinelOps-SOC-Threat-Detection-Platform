@@ -14,22 +14,34 @@ public partial class MainWindow : Window
 
     public MainWindow(CollectionService collectionService, ApiClientService apiClient)
     {
-        InitializeComponent();
+        try
+        {
+            InitializeComponent();
 
-        _collectionService = collectionService;
-        _apiClient = apiClient;
+            _collectionService = collectionService;
+            _apiClient = apiClient;
 
-        // Subscribe to status updates
-        _collectionService.StatusChanged += OnStatusChanged;
+            // Subscribe to status updates
+            _collectionService.StatusChanged += OnStatusChanged;
 
-        // UI refresh timer
-        _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _uiTimer.Tick += (_, _) => RefreshUI();
-        _uiTimer.Start();
+            // UI refresh timer
+            _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+            _uiTimer.Tick += (_, _) => RefreshUI();
+            _uiTimer.Start();
 
-        // Start collection
-        _collectionService.Start();
-        StatusText.Text = "Running";
+            // Start collection
+            _collectionService.Start();
+            StatusText.Text = "Running";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Error initializing main window:\n\n{ex.Message}",
+                "Initialization Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            throw;
+        }
     }
 
     private void RefreshUI()
