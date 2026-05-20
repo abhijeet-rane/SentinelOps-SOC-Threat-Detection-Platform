@@ -21,6 +21,20 @@ function ProtectedRoute({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
 }
 
+/**
+ * Role-based route guard. Reads the user's role from localStorage
+ * and checks against the allowedRoles list. If the user's role is
+ * not in the list, redirects to dashboard (not login — they ARE authenticated).
+ */
+function RoleRoute({ children, allowedRoles }) {
+  const user = JSON.parse(localStorage.getItem('soc_user') || '{}');
+  const userRole = user.role || '';
+  if (allowedRoles.includes('*') || allowedRoles.includes(userRole)) {
+    return children;
+  }
+  return <Navigate to="/" replace />;
+}
+
 export default function App() {
   return (
     <ToastProvider>
@@ -33,17 +47,40 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="alerts" element={<Alerts />} />
             <Route path="incidents" element={<Incidents />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="mitre" element={<MitreAttack />} />
-            <Route path="playbooks" element={<Playbooks />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="analytics" element={
+              <RoleRoute allowedRoles={['System Administrator', 'SOC Manager', 'SOC Analyst L1', 'SOC Analyst L2']}>
+                <Analytics />
+              </RoleRoute>
+            } />
+            <Route path="mitre" element={
+              <RoleRoute allowedRoles={['System Administrator', 'SOC Manager', 'SOC Analyst L1', 'SOC Analyst L2']}>
+                <MitreAttack />
+              </RoleRoute>
+            } />
+            <Route path="playbooks" element={
+              <RoleRoute allowedRoles={['System Administrator', 'SOC Manager']}>
+                <Playbooks />
+              </RoleRoute>
+            } />
+            <Route path="settings" element={
+              <RoleRoute allowedRoles={['System Administrator']}>
+                <SettingsPage />
+              </RoleRoute>
+            } />
             <Route path="threatintel" element={<ThreatIntel />} />
-            <Route path="audit" element={<AuditLog />} />
-            <Route path="reports" element={<Reports />} />
+            <Route path="audit" element={
+              <RoleRoute allowedRoles={['System Administrator', 'SOC Manager']}>
+                <AuditLog />
+              </RoleRoute>
+            } />
+            <Route path="reports" element={
+              <RoleRoute allowedRoles={['System Administrator', 'SOC Manager']}>
+                <Reports />
+              </RoleRoute>
+            } />
           </Route>
         </Routes>
       </BrowserRouter>
     </ToastProvider>
   );
 }
-

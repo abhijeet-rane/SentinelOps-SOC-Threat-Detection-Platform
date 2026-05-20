@@ -51,10 +51,16 @@ public class AuditLogController : ControllerBase
             query = query.Where(a => a.User != null && a.User.Username.Contains(user));
 
         if (from.HasValue)
-            query = query.Where(a => a.Timestamp >= from.Value);
+        {
+            var utcFrom = DateTime.SpecifyKind(from.Value, DateTimeKind.Utc);
+            query = query.Where(a => a.Timestamp >= utcFrom);
+        }
 
         if (to.HasValue)
-            query = query.Where(a => a.Timestamp <= to.Value);
+        {
+            var utcTo = DateTime.SpecifyKind(to.Value, DateTimeKind.Utc);
+            query = query.Where(a => a.Timestamp <= utcTo);
+        }
 
         var totalCount = await query.CountAsync();
 

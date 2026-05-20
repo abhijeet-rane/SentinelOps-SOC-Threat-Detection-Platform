@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Clock, User, MapPin, ExternalLink, AlertTriangle, ChevronUp, Save } from 'lucide-react';
+import { X, Shield, Clock, User, MapPin, ExternalLink, AlertTriangle, ChevronUp, Save, FileSearch, Loader2 } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from './ToastContext';
 
@@ -11,12 +11,45 @@ const SEV_COLOR = {
     Low: 'var(--green-400)',
 };
 
-export default function AlertDetailModal({ alert, onClose, onUpdate }) {
+export default function AlertDetailModal({ alert, onClose, onUpdate, onCreateIncident }) {
     const [status, setStatus] = useState(alert?.status || 'New');
     const [updating, setUpdating] = useState(false);
+    const [users, setUsers] = useState([]);
+    const [selectedAnalyst, setSelectedAnalyst] = useState('');
+    const [assigning, setAssigning] = useState(false);
     const toast = useToast();
 
+    useEffect(() => {
+        if (!alert) return;
+        const fetchUsers = async () => {
+            const res = await api.getUsers();
+            if (res?.success) setUsers(res.data || []);
+        };
+        fetchUsers();
+    }, [alert]);
+
     if (!alert) return null;
+
+    const handleAssign = async () => {
+        if (!selectedAnalyst) {
+            toast.info('Select an analyst first');
+            return;
+        }
+        setAssigning(true);
+        try {
+            const res = await api.assignAlert(alert.id, selectedAnalyst);
+            if (res?.success) {
+                toast.success('Alert assigned successfully');
+                if (onUpdate) onUpdate();
+                onClose();
+            } else {
+                toast.error(res?.message || 'Failed to assign alert');
+            }
+        } catch {
+            toast.error('Failed to assign alert');
+        }
+        setAssigning(false);
+    };
 
     const handleUpdateStatus = async () => {
         if (status === alert.status) {
@@ -34,7 +67,7 @@ export default function AlertDetailModal({ alert, onClose, onUpdate }) {
             } else {
                 toast.error(res.message || 'Failed to update status');
             }
-        } catch (err) {
+        } catch {
             toast.error('Failed to update alert status');
         }
         setUpdating(false);
@@ -51,7 +84,7 @@ export default function AlertDetailModal({ alert, onClose, onUpdate }) {
             } else {
                 toast.error(res.message || 'Failed to escalate alert');
             }
-        } catch (err) {
+        } catch {
             toast.error('Failed to escalate alert');
         }
         setUpdating(false);
@@ -178,6 +211,47 @@ export default function AlertDetailModal({ alert, onClose, onUpdate }) {
                                 )}
                             </div>
                         </div>
+
+                        {/* Assign Analyst */}
+                        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-default)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                            <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Assign to Analyst
+                                </label>
+                                <select
+                                    className="form-select"
+                                    value={selectedAnalyst}
+                                    onChange={e => setSelectedAnalyst(e.target.value)}
+                                    disabled={assigning}
+                                    style={{ width: '100%' }}
+                                >
+                                    <option value="">Select analyst...</option>
+                                    {users.map(u => (
+                                        <option key={u.id} value={u.id}>{u.username}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={handleAssign}
+                                disabled={assigning || !selectedAnalyst}
+                            >
+                                {assigning ? <><Loader2 size={14} className="spin" /> Assigning...</> : 'Assign'}
+                            </button>
+                        </div>
+
+                        {/* Create Incident */}
+                        {!alert.incidentId && onCreateIncident && (
+                            <div style={{ marginTop: 12 }}>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    style={{ color: 'var(--purple-400)' }}
+                                    onClick={() => { onCreateIncident(alert); onClose(); }}
+                                >
+                                    <FileSearch size={14} /> Create Incident
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
             </motion.div>

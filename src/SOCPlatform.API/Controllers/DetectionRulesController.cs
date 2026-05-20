@@ -73,7 +73,7 @@ public class DetectionRulesController : ControllerBase
     /// Create a new detection rule.
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "SystemAdmin")]
+    [Authorize(Policy = "ManageRules")]
     public async Task<IActionResult> Create([FromBody] DetectionRuleDto dto)
     {
         var rule = new DetectionRule
@@ -100,7 +100,7 @@ public class DetectionRulesController : ControllerBase
     /// Update a detection rule.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "SystemAdmin")]
+    [Authorize(Policy = "ManageRules")]
     public async Task<IActionResult> Update(Guid id, [FromBody] DetectionRuleDto dto)
     {
         var rule = await _context.DetectionRules.FindAsync(id);
@@ -126,7 +126,7 @@ public class DetectionRulesController : ControllerBase
     /// Toggle a rule's active status (enable/disable).
     /// </summary>
     [HttpPatch("{id:guid}/toggle")]
-    [Authorize(Policy = "SOCManager")]
+    [Authorize(Policy = "EnableDisableRules")]
     public async Task<IActionResult> Toggle(Guid id)
     {
         var rule = await _context.DetectionRules.FindAsync(id);
@@ -148,7 +148,7 @@ public class DetectionRulesController : ControllerBase
     /// Delete a detection rule.
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "SystemAdmin")]
+    [Authorize(Policy = "ManageRules")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var rule = await _context.DetectionRules.FindAsync(id);

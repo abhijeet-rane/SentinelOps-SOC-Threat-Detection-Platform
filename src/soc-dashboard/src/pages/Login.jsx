@@ -21,9 +21,14 @@ export default function Login() {
 
     const completeLogin = (data) => {
         setToken(data.accessToken);
+        if (data.refreshToken) {
+            localStorage.setItem('soc_refresh_token', data.refreshToken);
+        }
         localStorage.setItem('soc_user', JSON.stringify({
+            id: data.user?.id,
             username: data.user?.username || username,
-            role: data.user?.role || 'Analyst',
+            role: data.user?.role || 'SOC Analyst L1',
+            permissions: data.user?.permissions || [],
         }));
         navigate('/');
     };

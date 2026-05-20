@@ -95,8 +95,12 @@ public class ReportsController : ControllerBase
 
     private static (DateTime from, DateTime to) ResolveDates(DateTime? from, DateTime? to)
     {
-        var t = to ?? DateTime.UtcNow;
-        var f = from ?? t.AddDays(-30);
+        var t = to.HasValue
+            ? DateTime.SpecifyKind(to.Value, DateTimeKind.Utc)
+            : DateTime.UtcNow;
+        var f = from.HasValue
+            ? DateTime.SpecifyKind(from.Value, DateTimeKind.Utc)
+            : t.AddDays(-30);
         return (f, t);
     }
 }

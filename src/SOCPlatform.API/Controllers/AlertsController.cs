@@ -48,9 +48,15 @@ public class AlertsController : ControllerBase
         if (filter.AssignedTo.HasValue)
             query = query.Where(a => a.AssignedTo == filter.AssignedTo.Value);
         if (filter.From.HasValue)
-            query = query.Where(a => a.CreatedAt >= filter.From.Value);
+        {
+            var utcFrom = DateTime.SpecifyKind(filter.From.Value, DateTimeKind.Utc);
+            query = query.Where(a => a.CreatedAt >= utcFrom);
+        }
         if (filter.To.HasValue)
-            query = query.Where(a => a.CreatedAt <= filter.To.Value);
+        {
+            var utcTo = DateTime.SpecifyKind(filter.To.Value, DateTimeKind.Utc);
+            query = query.Where(a => a.CreatedAt <= utcTo);
+        }
         if (filter.SlaBreach == true)
             query = query.Where(a => a.SlaDeadline != null && DateTime.UtcNow > a.SlaDeadline && a.Status < AlertStatus.Resolved);
 

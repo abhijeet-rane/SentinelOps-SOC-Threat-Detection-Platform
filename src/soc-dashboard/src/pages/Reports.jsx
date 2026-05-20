@@ -30,9 +30,12 @@ export default function Reports() {
     const [from, setFrom] = useState(() => new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]);
     const [to, setTo] = useState(() => new Date().toISOString().split('T')[0]);
 
+    const [error, setError] = useState(null);
+
     const load = useCallback(async () => {
         setLoading(true);
         setData(null);
+        setError(null);
         try {
             let res;
             switch (tab) {
@@ -41,10 +44,18 @@ export default function Reports() {
                 case 'analysts': res = await api.getAnalystReport(from, to); break;
                 case 'compliance': res = await api.getComplianceReport(from, to, framework); break;
             }
-            if (res?.success) setData(res.data);
+            if (res?.success) {
+                setData(res.data);
+            } else {
+                const errMsg = res?.message || res?.errors?.join(', ') || 'Report generation failed. Check server logs.';
+                setError(errMsg);
+                toast.error(errMsg);
+            }
         } catch (err) {
             console.error('Report load failed:', err);
-            toast.error('Failed to load report');
+            const errMsg = err?.message || 'Failed to load report';
+            setError(errMsg);
+            toast.error(errMsg);
         }
         setLoading(false);
     }, [tab, from, to, framework, toast]);
@@ -120,6 +131,13 @@ export default function Reports() {
                     <Loader2 size={28} className="spin" style={{ color: 'var(--cyan-400)' }} />
                     <div style={{ marginTop: 10, color: 'var(--text-muted)' }}>Generating report…</div>
                 </div>
+            ) : error ? (
+                <div style={{ padding: 40, textAlign: 'center' }}>
+                    <AlertTriangle size={32} style={{ color: 'var(--red-400)', marginBottom: 8 }} />
+                    <div style={{ color: 'var(--red-400)', fontWeight: 600, marginBottom: 4 }}>Report generation failed</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', maxWidth: 500, margin: '0 auto' }}>{error}</div>
+                    <button className="btn btn-primary btn-sm" onClick={load} style={{ marginTop: 16 }}>Retry</button>
+                </div>
             ) : data ? (
                 <motion.div variants={item}>
                     {tab === 'daily' && <DailyView data={data} />}
@@ -149,8 +167,9 @@ function Kpi({ label, value, accent = 'var(--cyan-400)' }) {
 
 /* ─── Daily SOC Report ─── */
 function DailyView({ data }) {
-    const k = data.kpis;
-    const s = data.slaCompliance;
+    const k = data?.kpis || {};
+    const s = data?.slaCompliance || {};
+    const ab = data?.alertBreakdown || {};
     return (
         <>
             <div className="flex gap-sm" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
@@ -159,9 +178,9 @@ function DailyView({ data }) {
                 <Kpi label="Escalated" value={k.escalatedAlerts} accent="var(--amber-400)" />
                 <Kpi label="MTTD" value={`${k.mttdMinutes}m`} accent="var(--purple-400)" />
                 <Kpi label="MTTR" value={`${k.mttrMinutes}m`} accent="var(--blue-400)" />
-                <Kpi label="FP Rate" value={`${k.falsePositiveRate}%`} accent={k.falsePositiveRate > 20 ? 'var(--red-400)' : 'var(--green-400)'} />
-                <Kpi label="SLA Compliance" value={`${s.compliancePercent}%`} accent={s.compliancePercent >= 90 ? 'var(--green-400)' : 'var(--red-400)'} />
-                <Kpi label="Logs Ingested" value={data.totalLogsIngested.toLocaleString()} />
+                <Kpi label="FP Rate" value={`${k.falsePositiveRate ?? 0}%`} accent={(k.falsePositiveRate ?? 0) > 20 ? 'var(--red-400)' : 'var(--green-400)'} />
+                <Kpi label="SLA Compliance" value={`${s.compliancePercent ?? 0}%`} accent={(s.compliancePercent ?? 0) >= 90 ? 'var(--green-400)' : 'var(--red-400)'} />
+                <Kpi label="Logs Ingested" value={(data.totalLogsIngested ?? 0).toLocaleString()} />
                 <Kpi label="Playbook Runs" value={data.playbookExecutions} />
                 <Kpi label="New Incidents" value={data.newIncidents} accent="var(--red-400)" />
             </div>
@@ -173,7 +192,7 @@ function DailyView({ data }) {
                         {['Critical', 'High', 'Medium', 'Low'].map(s => (
                             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
                                 <div className={`severity-badge ${s.toLowerCase()}`} style={{ display: 'inline-block', marginBottom: 4 }}>{s}</div>
-                                <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{data.alertBreakdown[s.toLowerCase()]}</div>
+                                <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{ab[s.toLowerCase()] ?? 0}</div>
                             </div>
                         ))}
                     </div>
@@ -185,7 +204,7 @@ function DailyView({ data }) {
                             <div key={st} style={{ flex: 1, textAlign: 'center' }}>
                                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4 }}>{st}</div>
                                 <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                                    {data.alertBreakdown[st.charAt(0).toLowerCase() + st.slice(1)]}
+                                    {ab[st.charAt(0).toLowerCase() + st.slice(1)] ?? 0}
                                 </div>
                             </div>
                         ))}
@@ -219,14 +238,16 @@ function DailyView({ data }) {
 
 /* ─── Incident Summary ─── */
 function IncidentView({ data }) {
+    const sb = data?.severityBreakdown || {};
+    const incidents = data?.incidents || [];
     return (
         <>
             <div className="flex gap-sm" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
-                <Kpi label="Total Incidents" value={data.totalIncidents} />
-                <Kpi label="Open" value={data.openIncidents} accent="var(--amber-400)" />
-                <Kpi label="Resolved" value={data.resolvedIncidents} accent="var(--green-400)" />
-                <Kpi label="Closed" value={data.closedIncidents} accent="var(--text-muted)" />
-                <Kpi label="Avg Resolution" value={`${data.avgResolutionHours}h`} accent="var(--blue-400)" />
+                <Kpi label="Total Incidents" value={data?.totalIncidents ?? 0} />
+                <Kpi label="Open" value={data?.openIncidents ?? 0} accent="var(--amber-400)" />
+                <Kpi label="Resolved" value={data?.resolvedIncidents ?? 0} accent="var(--green-400)" />
+                <Kpi label="Closed" value={data?.closedIncidents ?? 0} accent="var(--text-muted)" />
+                <Kpi label="Avg Resolution" value={`${data?.avgResolutionHours ?? 0}h`} accent="var(--blue-400)" />
             </div>
 
             <div className="flex gap-sm" style={{ marginBottom: 16 }}>
@@ -236,27 +257,27 @@ function IncidentView({ data }) {
                         {['Critical', 'High', 'Medium', 'Low'].map(s => (
                             <div key={s} style={{ textAlign: 'center', flex: 1 }}>
                                 <div className={`severity-badge ${s.toLowerCase()}`} style={{ display: 'inline-block', marginBottom: 4 }}>{s}</div>
-                                <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{data.severityBreakdown[s.toLowerCase()]}</div>
+                                <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{sb[s.toLowerCase()] ?? 0}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {data.incidents?.length > 0 && (
+            {incidents.length > 0 && (
                 <div className="card">
                     <div style={{ overflowX: 'auto' }}>
                         <table className="data-table">
                             <thead><tr><th>Title</th><th>Severity</th><th>Status</th><th>Alerts</th><th>Resolution</th><th>Created</th></tr></thead>
                             <tbody>
-                                {data.incidents.map(i => (
+                                {incidents.map(i => (
                                     <tr key={i.id}>
                                         <td style={{ fontWeight: 600, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.title}</td>
-                                        <td><span className={`severity-badge ${i.severity.toLowerCase()}`}>{i.severity}</span></td>
-                                        <td><span className={`status-badge ${i.status.toLowerCase()}`}>{i.status}</span></td>
+                                        <td><span className={`severity-badge ${(i.severity || '').toLowerCase()}`}>{i.severity}</span></td>
+                                        <td><span className={`status-badge ${(i.status || '').toLowerCase()}`}>{i.status}</span></td>
                                         <td style={{ fontFamily: 'var(--font-mono)' }}>{i.alertCount}</td>
                                         <td style={{ fontFamily: 'var(--font-mono)' }}>{i.resolutionHours != null ? `${i.resolutionHours}h` : '—'}</td>
-                                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>{new Date(i.createdAt).toLocaleDateString()}</td>
+                                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>{i.createdAt ? new Date(i.createdAt).toLocaleDateString() : '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -320,6 +341,8 @@ function AnalystView({ data }) {
 
 /* ─── Compliance Report ─── */
 function ComplianceView({ data }) {
+    const controls = data?.controls || [];
+    const score = data?.overallScore ?? 0;
     const statusColor = {
         Compliant: 'var(--green-400)', Partial: 'var(--amber-400)', NonCompliant: 'var(--red-400)'
     };
@@ -330,41 +353,47 @@ function ComplianceView({ data }) {
     return (
         <>
             <div className="flex gap-sm" style={{ marginBottom: 16, flexWrap: 'wrap' }}>
-                <Kpi label="Framework" value={data.frameworkVersion} accent="var(--cyan-400)" />
-                <Kpi label="Overall Score" value={`${data.overallScore}%`}
-                    accent={data.overallScore >= 80 ? 'var(--green-400)' : data.overallScore >= 50 ? 'var(--amber-400)' : 'var(--red-400)'} />
-                <Kpi label="Compliant" value={data.controls.filter(c => c.status === 'Compliant').length} accent="var(--green-400)" />
-                <Kpi label="Partial" value={data.controls.filter(c => c.status === 'Partial').length} accent="var(--amber-400)" />
-                <Kpi label="Non-Compliant" value={data.controls.filter(c => c.status === 'NonCompliant').length} accent="var(--red-400)" />
+                <Kpi label="Framework" value={data?.frameworkVersion || '—'} accent="var(--cyan-400)" />
+                <Kpi label="Overall Score" value={`${score}%`}
+                    accent={score >= 80 ? 'var(--green-400)' : score >= 50 ? 'var(--amber-400)' : 'var(--red-400)'} />
+                <Kpi label="Compliant" value={controls.filter(c => c.status === 'Compliant').length} accent="var(--green-400)" />
+                <Kpi label="Partial" value={controls.filter(c => c.status === 'Partial').length} accent="var(--amber-400)" />
+                <Kpi label="Non-Compliant" value={controls.filter(c => c.status === 'NonCompliant').length} accent="var(--red-400)" />
             </div>
 
-            <div className="card">
-                <div style={{ overflowX: 'auto' }}>
-                    <table className="data-table">
-                        <thead><tr><th>ID</th><th>Control</th><th>Category</th><th>Status</th><th>Evidence</th></tr></thead>
-                        <tbody>
-                            {data.controls.map(c => (
-                                <tr key={c.controlId}>
-                                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{c.controlId}</td>
-                                    <td style={{ fontWeight: 500 }}>{c.controlName}</td>
-                                    <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{c.category}</td>
-                                    <td>
-                                        <span style={{
-                                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                                            color: statusColor[c.status] || 'var(--text-muted)',
-                                            background: `${statusColor[c.status] || 'var(--text-muted)'}15`,
-                                            padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600
-                                        }}>
-                                            {statusIcon[c.status]} {c.status}
-                                        </span>
-                                    </td>
-                                    <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: 300 }}>{c.evidence}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {controls.length > 0 ? (
+                <div className="card">
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="data-table">
+                            <thead><tr><th>ID</th><th>Control</th><th>Category</th><th>Status</th><th>Evidence</th></tr></thead>
+                            <tbody>
+                                {controls.map(c => (
+                                    <tr key={c.controlId}>
+                                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{c.controlId}</td>
+                                        <td style={{ fontWeight: 500 }}>{c.controlName}</td>
+                                        <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{c.category}</td>
+                                        <td>
+                                            <span style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                color: statusColor[c.status] || 'var(--text-muted)',
+                                                background: `${statusColor[c.status] || 'var(--text-muted)'}15`,
+                                                padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600
+                                            }}>
+                                                {statusIcon[c.status]} {c.status}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: 300 }}>{c.evidence}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No compliance controls found.
+                </div>
+            )}
         </>
     );
 }

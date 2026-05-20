@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { setToken } from '../api';
+import { setToken, api } from '../api';
 import { stop as stopAlertStream } from '../alertStream';
 import {
     Shield, LayoutDashboard, AlertTriangle, FileSearch, BarChart3,
@@ -17,14 +17,14 @@ const NAV_ITEMS = [
 
     { section: 'Intelligence' },
     { to: '/threatintel', label: 'Threat Intel', icon: Database, roles: ['*'] },
-    { to: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['Admin', 'SOC Manager', 'Analyst'] },
-    { to: '/mitre', label: 'MITRE ATT&CK', icon: Activity, roles: ['Admin', 'SOC Manager', 'Analyst'] },
+    { to: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['System Administrator', 'SOC Manager', 'SOC Analyst L1', 'SOC Analyst L2'] },
+    { to: '/mitre', label: 'MITRE ATT&CK', icon: Activity, roles: ['System Administrator', 'SOC Manager', 'SOC Analyst L1', 'SOC Analyst L2'] },
 
     { section: 'Management' },
-    { to: '/playbooks', label: 'Playbooks', icon: Zap, roles: ['Admin', 'SOC Manager'] },
-    { to: '/reports', label: 'Reports', icon: FileText, roles: ['Admin', 'SOC Manager'] },
-    { to: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
-    { to: '/audit', label: 'Audit Log', icon: ScrollText, roles: ['Admin', 'SOC Manager'] },
+    { to: '/playbooks', label: 'Playbooks', icon: Zap, roles: ['System Administrator', 'SOC Manager'] },
+    { to: '/reports', label: 'Reports', icon: FileText, roles: ['System Administrator', 'SOC Manager'] },
+    { to: '/settings', label: 'Settings', icon: Settings, roles: ['System Administrator'] },
+    { to: '/audit', label: 'Audit Log', icon: ScrollText, roles: ['System Administrator', 'SOC Manager'] },
 ];
 
 export default function Layout() {
@@ -39,9 +39,11 @@ export default function Layout() {
     };
 
     const handleLogout = async () => {
-        await stopAlertStream();                 // close the SignalR connection cleanly
+        try { await api.logout(); } catch { /* ignore logout API errors */ }
+        await stopAlertStream();
         setToken(null);
         localStorage.removeItem('soc_user');
+        localStorage.removeItem('soc_refresh_token');
         navigate('/login');
     };
 

@@ -136,7 +136,7 @@ public class PlaybooksController : ControllerBase
     /// Create a new playbook.
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "SystemAdmin")]
+    [Authorize(Policy = "ManageRules")]
     public async Task<IActionResult> Create([FromBody] PlaybookCreateDto dto)
     {
         if (!Enum.TryParse<PlaybookActionType>(dto.ActionType, true, out var actionType))
@@ -164,7 +164,7 @@ public class PlaybooksController : ControllerBase
     /// Update a playbook.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "SystemAdmin")]
+    [Authorize(Policy = "ManageRules")]
     public async Task<IActionResult> Update(Guid id, [FromBody] PlaybookCreateDto dto)
     {
         var playbook = await _context.Set<ResponsePlaybook>().FindAsync(id);
@@ -189,7 +189,7 @@ public class PlaybooksController : ControllerBase
     /// Toggle a playbook's active status.
     /// </summary>
     [HttpPatch("{id:guid}/toggle")]
-    [Authorize(Policy = "SOCManager")]
+    [Authorize(Policy = "EnableDisableRules")]
     public async Task<IActionResult> Toggle(Guid id)
     {
         var playbook = await _context.Set<ResponsePlaybook>().FindAsync(id);
@@ -270,7 +270,7 @@ public class PlaybooksController : ControllerBase
     /// Approve a pending playbook execution.
     /// </summary>
     [HttpPost("executions/{executionId:guid}/approve")]
-    [Authorize(Policy = "SOCManager")]
+    [Authorize(Policy = "ApproveResponses")]
     public async Task<IActionResult> Approve(Guid executionId)
     {
         var execution = await _context.Set<PlaybookExecution>().FindAsync(executionId);
@@ -296,7 +296,7 @@ public class PlaybooksController : ControllerBase
     /// Reject a pending playbook execution.
     /// </summary>
     [HttpPost("executions/{executionId:guid}/reject")]
-    [Authorize(Policy = "SOCManager")]
+    [Authorize(Policy = "ApproveResponses")]
     public async Task<IActionResult> Reject(Guid executionId, [FromBody] PlaybookRejectDto? dto)
     {
         var execution = await _context.Set<PlaybookExecution>().FindAsync(executionId);

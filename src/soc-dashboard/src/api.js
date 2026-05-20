@@ -34,9 +34,38 @@ async function request(path, options = {}) {
 
   // Don't intercept 401 on login/auth endpoints — let the caller handle it.
   if (res.status === 401 && !path.startsWith('/auth/')) {
+    // Attempt token refresh before giving up
+    const refreshToken = localStorage.getItem('soc_refresh_token');
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          if (refreshData.success && refreshData.data?.accessToken) {
+            setToken(refreshData.data.accessToken);
+            if (refreshData.data.refreshToken) {
+              localStorage.setItem('soc_refresh_token', refreshData.data.refreshToken);
+            }
+            // Retry the original request with new token
+            headers['Authorization'] = `Bearer ${refreshData.data.accessToken}`;
+            const retryRes = await fetch(`${API_BASE}${path}`, { ...options, headers });
+            const retryText = await retryRes.text();
+            if (!retryText) return retryRes.ok ? { success: true, data: null } : { success: false, message: `HTTP ${retryRes.status}` };
+            try { return JSON.parse(retryText); } catch { return { success: false, message: `HTTP ${retryRes.status}` }; }
+          }
+        }
+      } catch { /* refresh failed, fall through to logout */ }
+    }
+    // Refresh failed or no refresh token — clear session and redirect
     setToken(null);
+    localStorage.removeItem('soc_user');
+    localStorage.removeItem('soc_refresh_token');
     window.location.href = '/login';
-    throw new Error('Unauthorized');
+    throw new Error('Session expired');
   }
 
   // 429 is special — show it to the user with the Retry-After hint if set.
@@ -60,7 +89,16 @@ async function request(path, options = {}) {
   }
 
   try {
-    return JSON.parse(text);
+    const json = JSON.parse(text);
+    // If the response is a success (2xx) or already has our `success` field, return as-is.
+    if (res.ok || json.success !== undefined) return json;
+    // Non-2xx JSON without `success` field — likely ASP.NET ProblemDetails.
+    // Normalize into our standard shape so callers always see { success, message }.
+    return {
+      success: false,
+      message: json.detail || json.title || json.message || `HTTP ${res.status}: ${JSON.stringify(json).slice(0, 200)}`,
+      errors: json.errors ? (Array.isArray(json.errors) ? json.errors : Object.values(json.errors).flat()) : [],
+    };
   } catch {
     // Non-JSON response (HTML error page, plain text) — surface it rather than
     // crashing. Happens on 500 when the global exception handler misses.
@@ -80,6 +118,13 @@ export const api = {
     request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (token, newPassword) =>
     request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
+  register: (data) =>
+    request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  logout: () =>
+    request('/auth/logout', { method: 'POST' }),
+  refreshToken: (refreshToken) =>
+    request('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
+  getProfile: () => request('/auth/profile'),
 
   // ── MFA (TOTP, RFC 6238) ──
   // The login flow:
@@ -126,16 +171,33 @@ export const api = {
     request(`/incidents/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   addNote: (id, content) =>
     request(`/incidents/${id}/notes`, { method: 'POST', body: JSON.stringify({ content }) }),
+  addEvidence: (id, data) =>
+    request(`/incidents/${id}/evidence`, { method: 'POST', body: JSON.stringify(data) }),
+  linkAlerts: (id, alertIds) =>
+    request(`/incidents/${id}/alerts`, { method: 'POST', body: JSON.stringify(alertIds) }),
   getTimeline: (id) => request(`/incidents/${id}/timeline`),
 
   // ── Detection Rules ──
   getRules: () => request('/detectionrules'),
   getRule: (id) => request(`/detectionrules/${id}`),
+  createRule: (data) =>
+    request('/detectionrules', { method: 'POST', body: JSON.stringify(data) }),
+  updateRule: (id, data) =>
+    request(`/detectionrules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   toggleRule: (id) => request(`/detectionrules/${id}/toggle`, { method: 'PATCH' }),
   deleteRule: (id) => request(`/detectionrules/${id}`, { method: 'DELETE' }),
 
   // ── Playbooks ──
   getPlaybooks: () => request('/playbooks'),
+  getPlaybook: (id) => request(`/playbooks/${id}`),
+  createPlaybook: (data) =>
+    request('/playbooks', { method: 'POST', body: JSON.stringify(data) }),
+  updatePlaybook: (id, data) =>
+    request(`/playbooks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  togglePlaybook: (id) =>
+    request(`/playbooks/${id}/toggle`, { method: 'PATCH' }),
+  triggerPlaybook: (id, alertId) =>
+    request(`/playbooks/${id}/trigger`, { method: 'POST', body: JSON.stringify({ alertId }) }),
   getPendingExecutions: () => request('/playbooks/executions/pending'),
   approveExecution: (id) =>
     request(`/playbooks/executions/${id}/approve`, { method: 'POST' }),
@@ -171,6 +233,9 @@ export const api = {
   autoEscalateAlert: (alertId) =>
     request(`/threatintel/escalate/${alertId}`, { method: 'POST' }),
   getThreatIntelStats: () => request('/threatintel/stats'),
+  getThreatFeedSources: () => request('/threatintel/sources'),
+  syncThreatFeeds: () =>
+    request('/threatintel/sync', { method: 'POST' }),
 
   // ── Audit Logs ──
   getAuditLogs: (params = {}) => {
@@ -191,8 +256,6 @@ export const api = {
   deactivateUser: (id) =>
     request(`/auth/users/${id}/deactivate`, { method: 'PATCH' }),
 
-  // ── Roles ──
-  getRoles: () => request('/auth/roles'),
 
   // ── Reports ──
   getDailyReport: (from, to) =>

@@ -10,6 +10,7 @@ import {
     Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { api } from '../api';
+import { useToast } from '../components/ToastContext';
 
 import { container, item, INDICATOR_ICONS, THREAT_COLORS } from './ThreatIntelConstants';
 
@@ -141,18 +142,23 @@ export default function ThreatIntel() {
     const [total, setTotal] = useState(0);
     const [showAdd, setShowAdd] = useState(false);
     const [seeding, setSeeding] = useState(false);
+    const [sources, setSources] = useState([]);
+    const [syncing, setSyncing] = useState(false);
+    const toast = useToast();
 
     const load = useCallback(async () => {
         setLoading(true);
-        const [indRes, statsRes] = await Promise.all([
+        const [indRes, statsRes, srcRes] = await Promise.all([
             api.getThreatIntel(filter),
             api.getThreatIntelStats(),
+            api.getThreatFeedSources(),
         ]);
         if (indRes?.data) {
             setIndicators(indRes.data.items || indRes.data.Items || []);
             setTotal(indRes.data.total || indRes.data.TotalCount || 0);
         }
         if (statsRes?.data) setStats(statsRes.data);
+        if (srcRes?.data?.sources) setSources(srcRes.data.sources);
         setLoading(false);
     }, [filter]);
 
@@ -169,6 +175,21 @@ export default function ThreatIntel() {
         await api.seedThreatIntel();
         await load();
         setSeeding(false);
+    };
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const res = await api.syncThreatFeeds();
+            if (res?.success) {
+                toast.success(`Threat feed sync enqueued (Job: ${res.data?.jobId || 'N/A'})`);
+            } else {
+                toast.error(res?.message || 'Sync request failed');
+            }
+        } catch {
+            toast.error('Failed to trigger feed sync');
+        }
+        setSyncing(false);
     };
 
     const handleToggle = async (id) => {
@@ -196,6 +217,9 @@ export default function ThreatIntel() {
                 <div className="flex gap-sm">
                     <button className="btn btn-ghost btn-sm" onClick={handleSeed} disabled={seeding}>
                         {seeding ? <Loader2 size={14} className="spin" /> : <Database size={14} />} Seed Demo Data
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={handleSync} disabled={syncing}>
+                        {syncing ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Sync Feeds
                     </button>
                     <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>
                         <Plus size={14} /> Add IOC
@@ -233,6 +257,38 @@ export default function ThreatIntel() {
                     </div>
                 </motion.div>
             )}
+
+            {/* Threat Feed Sources */}
+            <motion.div variants={item} className="card" style={{ marginBottom: 20 }}>
+                <div style={{ padding: 22 }}>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                        <h3>
+                            <Globe size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 8 }} />
+                            Threat Feed Sources
+                        </h3>
+                        <button className="btn btn-primary btn-sm" onClick={handleSync} disabled={syncing}>
+                            {syncing ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Sync All Feeds
+                        </button>
+                    </div>
+                    {sources.length === 0 ? (
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No feed adapters registered.</div>
+                    ) : (
+                        <div className="flex gap-sm flex-wrap">
+                            {sources.map(name => (
+                                <div key={name} style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '8px 16px', borderRadius: 10,
+                                    background: 'rgba(6,182,212,0.08)',
+                                    border: '1px solid rgba(6,182,212,0.2)',
+                                }}>
+                                    <Database size={14} style={{ color: 'var(--cyan-400)' }} />
+                                    <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
 
             {/* Enrichment Panel */}
             <EnrichmentPanel />
